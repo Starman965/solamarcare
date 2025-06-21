@@ -138,7 +138,7 @@ nav {
     color: #000000;
     font-size: 1.2rem;
     max-width: 600px;
-    margin: 0 auto;
+    margin-bottom: 2rem;
 }
 
 .hero-image {
@@ -162,10 +162,21 @@ nav {
 .features {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 2rem;
-    padding: 1.5rem 5%;
+    gap: 1rem;
+}
+
+.desktop-features {
+    max-width: 600px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    row-gap: 1.2rem;
+}
+
+.mobile-features {
+    display: none;
     background-color: #000000;
+    padding: 1.5rem 15%;
 }
 
 .feature-item {
@@ -174,12 +185,27 @@ nav {
     gap: 0.8rem;
 }
 
-.feature-item i {
+.desktop-features .feature-item {
+    color: #000000;
+}
+
+.desktop-features .feature-item i {
+    color: #000000;
+    font-size: 1.3rem;
+}
+
+.desktop-features .feature-item span {
+    color: #000000;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.mobile-features .feature-item i {
     color: var(--primary-color);
     font-size: 1.5rem;
 }
 
-.feature-item span {
+.mobile-features .feature-item span {
     color: var(--white);
     font-size: 1.2rem;
     font-weight: 500;
@@ -437,13 +463,17 @@ footer {
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .features {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 1.5rem 15%;
+    .desktop-features {
+        display: none;
     }
 
-    .feature-item {
+    .mobile-features {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mobile-features .feature-item {
         padding-left: 1rem;
     }
 
