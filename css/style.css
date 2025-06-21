@@ -40,6 +40,15 @@ nav {
     font-size: 2rem;
     font-weight: bold;
     color: #000000;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
+    display: block;
 }
 
 .nav-buttons {
@@ -57,12 +66,23 @@ nav {
     font-weight: bold;
     transition: all 0.3s ease;
     border: 2px solid #000000;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.brochure-button i {
+    color: #dc3545;
 }
 
 .brochure-button:hover {
     background-color: #000000;
     color: var(--white);
     transform: scale(1.05);
+}
+
+.brochure-button:hover i {
+    color: var(--white);
 }
 
 .cta-button {
@@ -186,6 +206,41 @@ nav {
     margin: 0 auto;
 }
 
+.brochure-container {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.brochure-container .brochure-button {
+    background-color: var(--white);
+    color: #000000;
+    padding: 1rem 2rem;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    border: 2px solid #000000;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.brochure-container .brochure-button i {
+    font-size: 1.3em;
+    color: #dc3545;
+}
+
+.brochure-container .brochure-button:hover {
+    background-color: #000000;
+    color: var(--white);
+    transform: translateY(-2px);
+}
+
+.brochure-container .brochure-button:hover i {
+    color: var(--white);
+}
+
 .service-card {
     background: var(--white);
     padding: 2rem;
@@ -304,7 +359,7 @@ nav {
 }
 
 .contact-info a {
-    color: var(--text-color);
+    color: var(--white);
     text-decoration: none;
     font-size: 1.2rem;
     transition: all 0.3s ease;
@@ -319,22 +374,21 @@ nav {
     font-size: 1.1em;
 }
 
-.contact-info a:hover {
-    color: var(--white);
-    background-color: var(--primary-color);
-    transform: translateY(-2px);
-}
-
-.contact-info .phone:hover {
+.contact-info .phone {
     background-color: #28a745;
 }
 
-.contact-info .email:hover {
+.contact-info .email {
     background-color: #dc3545;
 }
 
-.contact-info .website:hover {
+.contact-info .website {
     background-color: var(--secondary-color);
+}
+
+.contact-info a:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
 }
 
 /* Footer */
@@ -380,6 +434,7 @@ footer {
     .contact-info a {
         width: 100%;
         justify-content: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .features {
@@ -390,6 +445,24 @@ footer {
 
     .feature-item {
         padding-left: 1rem;
+    }
+
+    .brochure-button, .cta-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nav-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .logo {
+        font-size: 1.8rem;
+    }
+
+    .logo-img {
+        height: 35px;
     }
 }
 
@@ -415,5 +488,13 @@ footer {
     .brochure-button, .cta-button {
         width: 100%;
         text-align: center;
+    }
+
+    .logo {
+        font-size: 1.6rem;
+    }
+
+    .logo-img {
+        height: 30px;
     }
 } 
