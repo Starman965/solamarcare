@@ -361,42 +361,62 @@
                 services.push(checkbox.labels[0].textContent.trim());
             });
 
-            // Create form data object
-            const formData = {
-                fullName: document.getElementById('fullName').value,
-                address: document.getElementById('address').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value,
-                services: services.join(', '),
-                notes: document.getElementById('notes').value,
-                timestamp: new Date().toISOString()
-            };
+            // Create form data
+            const formData = new FormData();
+            formData.append('timestamp', new Date().toISOString());
+            formData.append('fullName', document.getElementById('fullName').value);
+            formData.append('address', document.getElementById('address').value);
+            formData.append('phone', document.getElementById('phone').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('services', services.join(', '));
+            formData.append('notes', document.getElementById('notes').value);
 
-            // Send to Google Apps Script
-            fetch('https://script.google.com/macros/s/AKfycbwBHKvrN75gtiF0rdpn--fRpvghKDpYkL4qXEt5BeYk94R30vl7BvfphBI3Qrp27Ok/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
+            // Send to Google Apps Script using JSONP approach
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbwBHKvrN75gtiF0rdpn--fRpvghKDpYkL4qXEt5BeYk94R30vl7BvfphBI3Qrp27Ok/exec';
+            
+            // Create a temporary form and submit it
+            const tempForm = document.createElement('form');
+            tempForm.method = 'POST';
+            tempForm.action = scriptURL;
+            tempForm.target = 'hidden_iframe';
+
+            // Add all form data to the temporary form
+            for(let pair of formData.entries()) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = pair[0];
+                input.value = pair[1];
+                tempForm.appendChild(input);
+            }
+
+            // Create hidden iframe for response
+            const iframe = document.createElement('iframe');
+            iframe.name = 'hidden_iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+
+            // Handle response
+            iframe.onload = function() {
                 submitButton.disabled = false;
                 submitButton.innerHTML = 'Submit Intake Form';
-                if (data.result === 'success') {
-                    alert('Thank you for submitting your intake form. We will contact you shortly.');
-                    this.reset();
-                } else {
-                    alert('There was an error submitting the form. Please try again or contact us directly.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+                document.getElementById('intakeForm').reset();
+                alert('Thank you for submitting your intake form. We will contact you shortly.');
+                document.body.removeChild(iframe);
+                document.body.removeChild(tempForm);
+            };
+
+            // Handle error
+            iframe.onerror = function() {
                 submitButton.disabled = false;
                 submitButton.innerHTML = 'Submit Intake Form';
                 alert('There was an error submitting the form. Please try again or contact us directly.');
-            });
+                document.body.removeChild(iframe);
+                document.body.removeChild(tempForm);
+            };
+
+            // Submit the form
+            document.body.appendChild(tempForm);
+            tempForm.submit();
         });
     </script>
 </body>
