@@ -49,8 +49,15 @@ function showSection(sectionName) {
     const sections = ['clients', 'visits', 'invoices', 'marketing'];
     sections.forEach(section => {
         const element = document.getElementById(`${section}Section`);
-        element.style.display = section === sectionName ? 'block' : 'none';
+        if (element) {
+            element.style.display = section === sectionName ? 'block' : 'none';
+        }
     });
+
+    // Initialize sections as needed
+    if (sectionName === 'invoices') {
+        loadInvoices();
+    }
 }
 
 // Data Loading Functions
@@ -58,7 +65,7 @@ async function loadDashboardData() {
     try {
         await loadClients();
         await loadVisits();
-        await loadInvoices();
+        // Invoices are loaded when showing the section
         await loadMarketingCampaigns();
     } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -84,24 +91,7 @@ async function loadVisits() {
     }
 }
 
-async function loadInvoices() {
-    const invoicesList = document.getElementById('invoicesList');
-    try {
-        const snapshot = await db.collection('clients').get();
-        invoicesList.innerHTML = '';
-        
-        for (const clientDoc of snapshot.docs) {
-            const invoicesSnapshot = await clientDoc.ref.collection('invoices').get();
-            invoicesSnapshot.forEach(doc => {
-                const invoice = doc.data();
-                const invoiceCard = createInvoiceCard(doc.id, invoice, clientDoc.data().name);
-                invoicesList.appendChild(invoiceCard);
-            });
-        }
-    } catch (error) {
-        console.error('Error loading invoices:', error);
-    }
-}
+// loadInvoices function is now handled in invoice.js
 
 async function loadMarketingCampaigns() {
     const campaignsList = document.getElementById('campaignsList');
@@ -135,22 +125,7 @@ function createVisitCard(id, visit, clientName) {
     return card;
 }
 
-function createInvoiceCard(id, invoice, clientName) {
-    const card = document.createElement('div');
-    card.className = 'data-card';
-    card.innerHTML = `
-        <h3>Invoice #${id.slice(0, 8)}</h3>
-        <p>Client: ${clientName}</p>
-        <p>Amount: $${invoice.amount}</p>
-        <p>Status: ${invoice.status}</p>
-        <div class="card-actions">
-            <button onclick="viewInvoice('${id}')" class="card-button">
-                <i class="fas fa-eye"></i> View
-            </button>
-        </div>
-    `;
-    return card;
-}
+// Invoice card creation is now handled in invoice.js
 
 function createCampaignCard(id, campaign) {
     const card = document.createElement('div');
