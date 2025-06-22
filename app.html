@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solamar Care - CRM Dashboard</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Solamar Care - CRM Dashboard">
+    <meta name="description" content="Internal client management system for Solamar Care services">
+    
+    <!-- iOS/Apple specific -->
+    <link rel="apple-touch-icon" href="images/solamar_marc.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/solamar_marc.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <!-- Login Section -->
+    <div id="loginSection" class="auth-container">
+        <div class="auth-box">
+            <img src="images/solamar_care_logo.png" alt="Solamar Care Logo" class="auth-logo">
+            <h2>Solamar Care Management</h2>
+            <div id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button onclick="handleLogin()" class="auth-button">Login</button>
+                <p id="authError" class="error-message"></p>
+                <p class="auth-links">
+                    Don't have an account? <a href="register.html">Register here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Section (Hidden by default) -->
+    <div id="dashboardSection" class="dashboard-container" style="display: none;">
+        <nav class="dashboard-nav">
+            <div class="nav-logo">
+                <img src="images/solamar_care_logo_white.png" alt="Solamar Care Logo">
+                <span>Solamar Care Management</span>
+            </div>
+            <div class="nav-menu">
+                <button onclick="showSection('clients')" class="nav-button"><i class="fas fa-users"></i> Clients</button>
+                <button onclick="showSection('visits')" class="nav-button"><i class="fas fa-calendar-check"></i> Visits</button>
+                <button onclick="showSection('invoices')" class="nav-button"><i class="fas fa-file-invoice-dollar"></i> Invoices</button>
+                <button onclick="showSection('marketing')" class="nav-button"><i class="fas fa-bullhorn"></i> Marketing</button>
+                <button onclick="handleLogout()" class="nav-button logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </nav>
+
+        <main class="dashboard-main">
+            <!-- Clients Section -->
+            <section id="clientsSection" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Clients</h2>
+                    <div class="header-actions">
+                        <div class="search-box">
+                            <input type="text" id="clientSearch" placeholder="Search clients...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <button onclick="showAddClientModal()" class="action-button">
+                            <i class="fas fa-plus"></i> Add New Client
+                        </button>
+                    </div>
+                </div>
+                <div id="clientsList" class="data-list"></div>
+            </section>
+
+            <!-- Client Modal -->
+            <div id="clientModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modalTitle">Add New Client</h3>
+                        <button onclick="closeClientModal()" class="close-button">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="clientForm" class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientFirstName">First Name</label>
+                                    <input type="text" id="clientFirstName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientLastName">Last Name</label>
+                                    <input type="text" id="clientLastName" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientEmail">Email</label>
+                                    <input type="email" id="clientEmail" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientPhone">Phone</label>
+                                    <input type="tel" id="clientPhone" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientAddress">Street Address</label>
+                                <input type="text" id="clientAddress" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientCity">City</label>
+                                    <input type="text" id="clientCity" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientState">State</label>
+                                    <input type="text" id="clientState" required maxlength="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientZip">ZIP Code</label>
+                                    <input type="text" id="clientZip" required maxlength="10">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientStartDate">Start Date</label>
+                                    <input type="date" id="clientStartDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientEndDate">End Date</label>
+                                    <input type="date" id="clientEndDate">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group status-group">
+                                    <label>Status</label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="clientStatus" checked>
+                                        <label for="clientStatus" class="toggle-label">
+                                            <span class="toggle-inner"></span>
+                                            <span class="toggle-switch"></span>
+                                        </label>
+                                        <span class="status-text">Active</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientNotes">Notes</label>
+                                    <textarea id="clientNotes" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button onclick="closeClientModal()" class="button secondary">Cancel</button>
+                        <button onclick="saveClient()" class="button primary">Save Client</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visits Section -->
+            <section id="visitsSection" class="dashboard-section" style="display: none;">
+                <h2>Service Visits</h2>
+                <button onclick="showAddVisitForm()" class="action-button">
+                    <i class="fas fa-plus"></i> Add New Visit
+                </button>
+                <div id="visitsList" class="data-list"></div>
+            </section>
+
+            <!-- Invoices Section -->
+            <section id="invoicesSection" class="dashboard-section" style="display: none;">
+                <h2>Invoices</h2>
+                <button onclick="showCreateInvoiceForm()" class="action-button">
+                    <i class="fas fa-plus"></i> Create Invoice
+                </button>
+                <div id="invoicesList" class="data-list"></div>
+            </section>
+
+            <!-- Marketing Section -->
+            <section id="marketingSection" class="dashboard-section" style="display: none;">
+                <h2>Marketing Campaigns</h2>
+                <button onclick="showAddCampaignForm()" class="action-button">
+                    <i class="fas fa-plus"></i> New Campaign
+                </button>
+                <div id="campaignsList" class="data-list"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/crm.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html> 
