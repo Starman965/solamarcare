@@ -593,9 +593,20 @@ async function showPrintPreview() {
                         text-align: left;
                         border-bottom: 1px solid #ddd;
                     }
-                    .totals {
+                    th:last-child, td:last-child {
                         text-align: right;
+                    }
+                    .totals {
+                        width: 100%;
                         margin-top: 20px;
+                        display: grid;
+                        grid-template-columns: auto 150px;
+                        justify-content: end;
+                    }
+                    .totals p {
+                        margin: 5px 0;
+                        text-align: right;
+                        padding-right: 12px;
                     }
                     .payment-info {
                         margin-top: 30px;
@@ -652,15 +663,18 @@ async function showPrintPreview() {
                                 <td>${item.quantity}</td>
                                 <td>${item.description}</td>
                                 <td>$${item.unitPrice.toFixed(2)}</td>
-                                <td>$${item.lineTotal.toFixed(2)}</td>
+                                <td>$${(item.quantity * item.unitPrice).toFixed(2)}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
                 
                 <div class="totals">
-                    <p><strong>Total: $${subtotal.toFixed(2)}</strong></p>
-                    <p>Due: ${getFormattedDueDate()}</p>
+                    <div></div>
+                    <div>
+                        <p><strong>Total: $${subtotal.toFixed(2)}</strong></p>
+                        <p>Due: ${getFormattedDueDate()}</p>
+                    </div>
                 </div>
 
                 <div class="payment-info">
@@ -923,9 +937,20 @@ async function printInvoice(id) {
                         text-align: left;
                         border-bottom: 1px solid #ddd;
                     }
-                    .totals {
+                    th:last-child, td:last-child {
                         text-align: right;
+                    }
+                    .totals {
+                        width: 100%;
                         margin-top: 20px;
+                        display: grid;
+                        grid-template-columns: auto 150px;
+                        justify-content: end;
+                    }
+                    .totals p {
+                        margin: 5px 0;
+                        text-align: right;
+                        padding-right: 12px;
                     }
                     .payment-info {
                         margin-top: 30px;
@@ -989,8 +1014,11 @@ async function printInvoice(id) {
                 </table>
                 
                 <div class="totals">
-                    <p><strong>Total: $${invoice.total.toFixed(2)}</strong></p>
-                    <p>Due: ${invoice.dueDate === 'upon_receipt' ? 'Upon Receipt' : new Date(invoice.dueDate).toLocaleDateString()}</p>
+                    <div></div>
+                    <div>
+                        <p><strong>Total: $${invoice.total.toFixed(2)}</strong></p>
+                        <p>Due: ${invoice.dueDate === 'upon_receipt' ? 'Upon Receipt' : new Date(invoice.dueDate).toLocaleDateString()}</p>
+                    </div>
                 </div>
 
                 <div class="payment-info">
