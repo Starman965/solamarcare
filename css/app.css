@@ -287,26 +287,57 @@ input[type="date"]:focus {
 
 .card-actions {
     display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
+    gap: 8px;
+    margin-top: 16px;
+    justify-content: flex-end;
 }
 
 .card-button {
-    background-color: transparent;
-    border: 1px solid var(--secondary-color);
-    color: var(--secondary-color);
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
-    display: flex;
+    font-size: 14px;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    transition: background-color 0.3s, color 0.3s;
+    gap: 8px;
+    transition: all 0.2s ease;
+    font-weight: 500;
 }
 
-.card-button:hover {
+.card-button i {
+    font-size: 16px;
+}
+
+/* Edit button style */
+.card-button.edit,
+.card-button:first-child {
+    background-color: #ecf0f1;
+    color: var(--primary-color);
+    border: 1px solid #bdc3c7;
+}
+
+.card-button.edit:hover,
+.card-button:first-child:hover {
+    background-color: #bdc3c7;
+    color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* View button style */
+.card-button.view,
+.card-button:last-child {
     background-color: var(--secondary-color);
     color: white;
+}
+
+.card-button.view:hover,
+.card-button:last-child:hover {
+    background-color: #2980b9;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Grid Layout for Cards */
@@ -531,14 +562,15 @@ input[type="date"]:focus {
 
 /* Danger Button Style */
 .button.danger {
-    background-color: #dc3545;
+    background-color: var(--accent-color);
     color: white;
     border: none;
 }
 
 .button.danger:hover {
-    background-color: #c82333;
-    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+    background-color: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Confirm Dialog Styling */
@@ -606,15 +638,20 @@ textarea#clientNotes:focus {
 
 /* Button Styles */
 .button {
-    padding: 0.5rem 1rem;
-    border: 1px solid transparent;
-    border-radius: 4px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
     cursor: pointer;
-    font-weight: 500;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
+    gap: 8px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.button i {
+    font-size: 16px;
 }
 
 .button.primary {
@@ -624,18 +661,32 @@ textarea#clientNotes:focus {
 
 .button.primary:hover {
     background-color: #2980b9;
-    box-shadow: 0 2px 4px rgba(41, 128, 185, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .button.secondary {
-    background-color: white;
-    border-color: var(--secondary-color);
-    color: var(--secondary-color);
+    background-color: #ecf0f1;
+    color: var(--primary-color);
+    border: 1px solid #bdc3c7;
 }
 
 .button.secondary:hover {
-    background-color: #f8f9fa;
-    box-shadow: 0 2px 4px rgba(41, 128, 185, 0.1);
+    background-color: #bdc3c7;
+    color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button.danger {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.button.danger:hover {
+    background-color: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Textarea Styles */
@@ -705,8 +756,9 @@ textarea:focus {
 
 .card-actions {
     display: flex;
-    gap: 0.5rem;
-    margin-left: 1rem;
+    gap: 8px;
+    margin-top: 16px;
+    justify-content: flex-end;
 }
 
 /* Data List Grid */
@@ -920,18 +972,25 @@ textarea:focus {
 /* Detail Header in Modal */
 .detail-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-header h4 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-family: monospace;
+    font-size: 1.1rem;
 }
 
 .detail-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    margin-bottom: 1rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
 /* Responsive adjustments */
@@ -950,4 +1009,25 @@ textarea:focus {
     .status-badge {
         margin-left: 0;
     }
+}
+
+.account-id {
+    font-family: monospace;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.account-id-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.account-id-header h4 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-family: monospace;
+    font-size: 1.1rem;
 } 

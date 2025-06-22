@@ -166,6 +166,27 @@
                 </div>
             </div>
 
+            <!-- Client View Modal -->
+            <div id="clientViewModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="viewModalTitle">Client Details</h3>
+                        <button onclick="closeViewModal()" class="close-button">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="clientViewContent">
+                        <!-- Content will be dynamically populated -->
+                    </div>
+                    <div class="modal-footer">
+                        <button onclick="editFromView()" class="button primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button onclick="closeViewModal()" class="button secondary">Close</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Visits Section -->
             <section id="visitsSection" class="dashboard-section" style="display: none;">
                 <h2>Service Visits</h2>

@@ -3,6 +3,23 @@
 // Client Management
 const clientsCollection = db.collection('clients');
 
+// Load Clients Function
+async function loadClients() {
+    const clientsList = document.getElementById('clientsList');
+    try {
+        const snapshot = await db.collection('clients').get();
+        clientsList.innerHTML = '';
+        
+        snapshot.forEach(doc => {
+            const client = doc.data();
+            const clientCard = createClientCard(doc.id, client);
+            clientsList.appendChild(clientCard);
+        });
+    } catch (error) {
+        console.error('Error loading clients:', error);
+    }
+}
+
 const crmOperations = {
     // Client Operations
     addClient: async (clientData) => {
@@ -114,6 +131,75 @@ function showAddClientModal() {
     
     modalTitle.textContent = 'Add New Client';
     form.reset();
+    form.innerHTML = `
+        <div class="form-row">
+            <div class="form-group">
+                <label for="clientFirstName">First Name</label>
+                <input type="text" id="clientFirstName" required>
+            </div>
+            <div class="form-group">
+                <label for="clientLastName">Last Name</label>
+                <input type="text" id="clientLastName" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="clientEmail">Email</label>
+                <input type="email" id="clientEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="clientPhone">Phone</label>
+                <input type="tel" id="clientPhone" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="clientAddress">Street Address</label>
+            <input type="text" id="clientAddress" required>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="clientCity">City</label>
+                <input type="text" id="clientCity" required>
+            </div>
+            <div class="form-group">
+                <label for="clientState">State</label>
+                <input type="text" id="clientState" required maxlength="2">
+            </div>
+            <div class="form-group">
+                <label for="clientZip">ZIP Code</label>
+                <input type="text" id="clientZip" required maxlength="10">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="clientStartDate">Start Date</label>
+                <input type="date" id="clientStartDate" required>
+            </div>
+            <div class="form-group">
+                <label for="clientEndDate">End Date</label>
+                <input type="date" id="clientEndDate">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group status-group">
+                <label>Status</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="clientStatus" checked>
+                    <label for="clientStatus" class="toggle-label">
+                        <span class="toggle-inner"></span>
+                        <span class="toggle-switch"></span>
+                    </label>
+                    <span class="status-text">Active</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="clientNotes">Notes</label>
+                <textarea id="clientNotes" rows="3"></textarea>
+            </div>
+        </div>
+    `;
 
     // Pre-populate Carlsbad address fields
     document.getElementById('clientCity').value = 'Carlsbad';
@@ -123,13 +209,131 @@ function showAddClientModal() {
     modal.style.display = 'block';
 }
 
+// View Client Details Function
+let currentViewingClientId = null;
+
+async function viewClientDetails(clientId) {
+    try {
+        const doc = await db.collection('clients').doc(clientId).get();
+        if (!doc.exists) {
+            console.error('Client not found');
+            return;
+        }
+
+        const client = doc.data();
+        currentViewingClientId = clientId; // Store the current client ID
+        
+        const viewModal = document.getElementById('clientViewModal');
+        const modalTitle = document.getElementById('viewModalTitle');
+        const viewContent = document.getElementById('clientViewContent');
+
+        if (!viewModal || !modalTitle || !viewContent) {
+            console.error('Required view modal elements not found');
+            return;
+        }
+
+        modalTitle.textContent = 'Client Details';
+
+        const modalContent = `
+            <div class="detail-header">
+                <h4>Client ID: ${client.accountId || 'Not Assigned'}</h4>
+                <span class="status-badge ${client.isActive ? 'active' : 'inactive'}">
+                    <i class="fas fa-circle"></i> ${client.isActive ? 'Active' : 'Inactive'}
+                </span>
+            </div>
+            <div class="detail-row">
+                <div class="detail-group">
+                    <label>Name</label>
+                    <p>${client.firstName} ${client.lastName}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Email</label>
+                    <p>${client.email}</p>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-group">
+                    <label>Phone</label>
+                    <p>${client.phone}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Address</label>
+                    <p>${client.address.street}<br>
+                    ${client.address.city}, ${client.address.state} ${client.address.zip}</p>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-group">
+                    <label>Start Date</label>
+                    <p>${new Date(client.startDate).toLocaleDateString()}</p>
+                </div>
+                ${client.endDate ? `
+                <div class="detail-group">
+                    <label>End Date</label>
+                    <p>${new Date(client.endDate).toLocaleDateString()}</p>
+                </div>
+                ` : ''}
+            </div>
+            <div class="detail-row">
+                <div class="detail-group">
+                    <label>Notes</label>
+                    <p>${client.notes || 'No notes available'}</p>
+                </div>
+            </div>
+        `;
+
+        viewContent.innerHTML = modalContent;
+        viewModal.style.display = 'block';
+    } catch (error) {
+        console.error('Error viewing client details:', error);
+    }
+}
+
+function closeViewModal() {
+    const viewModal = document.getElementById('clientViewModal');
+    if (viewModal) {
+        viewModal.style.display = 'none';
+        currentViewingClientId = null;
+    }
+}
+
+function editFromView() {
+    if (currentViewingClientId) {
+        closeViewModal();
+        editClient(currentViewingClientId);
+    }
+}
+
+// Update the closeClientModal function to also reset the form
 function closeClientModal() {
     const modal = document.getElementById('clientModal');
-    modal.style.display = 'none';
+    const form = document.getElementById('clientForm');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    if (form) {
+        form.reset();
+        // Remove any existing Client ID display
+        const existingClientId = form.querySelector('.account-id');
+        if (existingClientId) {
+            existingClientId.remove();
+        }
+        // Reset the form's client ID
+        form.dataset.clientId = '';
+    }
+}
+
+// Generate Client ID
+function generateClientId() {
+    const min = 100000; // Minimum 6-digit number
+    const max = 999999; // Maximum 6-digit number
+    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    return `A${randomNumber}`;
 }
 
 async function saveClient() {
-    const clientId = document.getElementById('clientForm').dataset.clientId;
+    const form = document.getElementById('clientForm');
+    const clientId = form.dataset.clientId;
     const firstName = document.getElementById('clientFirstName').value.trim();
     const lastName = document.getElementById('clientLastName').value.trim();
     const email = document.getElementById('clientEmail').value.trim();
@@ -144,7 +348,7 @@ async function saveClient() {
     const notes = document.getElementById('clientNotes').value.trim();
 
     try {
-        const clientData = {
+        let clientData = {
             firstName,
             lastName,
             email,
@@ -163,10 +367,11 @@ async function saveClient() {
         };
 
         if (clientId) {
-            // Update existing client
+            // Update existing client - don't modify the accountId
             await db.collection('clients').doc(clientId).update(clientData);
         } else {
-            // Add new client
+            // Add new client - generate new accountId
+            clientData.accountId = generateClientId();
             clientData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection('clients').add(clientData);
         }
@@ -239,11 +444,11 @@ function createClientCard(id, client) {
     
     card.innerHTML = `
         <div class="client-info">
+            <div class="account-id">Client ID: ${client.accountId || 'Not Assigned'}</div>
             <div class="client-header">
-                <h3>${client.firstName} ${client.lastName}</h3>
-                <span class="status-badge ${statusClass}">
+                <h3>${client.firstName} ${client.lastName} <span class="status-badge ${statusClass}">
                     <i class="fas fa-circle"></i> ${statusText}
-                </span>
+                </span></h3>
             </div>
             <div class="contact-info">
                 <p><i class="fas fa-envelope"></i> ${client.email}</p>
@@ -297,122 +502,68 @@ async function deleteClient(clientId) {
 async function editClient(clientId) {
     try {
         const doc = await db.collection('clients').doc(clientId).get();
+        if (!doc.exists) {
+            console.error('Client not found');
+            return;
+        }
+
         const client = doc.data();
-        
-        // Populate the modal with client data
-        document.getElementById('modalTitle').textContent = 'Edit Client';
-        document.getElementById('clientFirstName').value = client.firstName;
-        document.getElementById('clientLastName').value = client.lastName;
-        document.getElementById('clientEmail').value = client.email;
-        document.getElementById('clientPhone').value = client.phone;
-        document.getElementById('clientAddress').value = client.address.street;
-        document.getElementById('clientCity').value = client.address.city;
-        document.getElementById('clientState').value = client.address.state;
-        document.getElementById('clientZip').value = client.address.zip;
-        document.getElementById('clientStartDate').value = client.startDate;
-        document.getElementById('clientEndDate').value = client.endDate || '';
+        const modal = document.getElementById('clientModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const form = document.getElementById('clientForm');
+        const modalBody = modal.querySelector('.modal-body');
+
+        if (!modal || !modalTitle || !form || !modalBody) {
+            console.error('Required modal elements not found');
+            return;
+        }
+
+        modalTitle.textContent = 'Edit Client';
+        form.dataset.clientId = clientId;
+
+        // Add Client ID display at the top of the form
+        const clientIdDisplay = document.createElement('div');
+        clientIdDisplay.className = 'account-id';
+        clientIdDisplay.style.fontFamily = 'monospace';
+        clientIdDisplay.style.fontSize = '1.1em';
+        clientIdDisplay.style.marginBottom = '16px';
+        clientIdDisplay.textContent = `Client ID: ${client.accountId || 'Not Assigned'}`;
+        form.insertBefore(clientIdDisplay, form.firstChild);
+
+        // Now that we've set up the form, populate the fields
+        document.getElementById('clientFirstName').value = client.firstName || '';
+        document.getElementById('clientLastName').value = client.lastName || '';
+        document.getElementById('clientEmail').value = client.email || '';
+        document.getElementById('clientPhone').value = client.phone || '';
+        document.getElementById('clientAddress').value = client.address?.street || '';
+        document.getElementById('clientCity').value = client.address?.city || '';
+        document.getElementById('clientState').value = client.address?.state || '';
+        document.getElementById('clientZip').value = client.address?.zip || '';
+        document.getElementById('clientStartDate').value = client.startDate || '';
+        if (client.endDate) {
+            document.getElementById('clientEndDate').value = client.endDate;
+        }
         document.getElementById('clientStatus').checked = client.isActive;
         document.getElementById('clientNotes').value = client.notes || '';
 
-        // Update status text based on checkbox
+        // Update modal footer
+        const modalFooter = modal.querySelector('.modal-footer');
+        if (modalFooter) {
+            modalFooter.innerHTML = `
+                <button onclick="deleteClient('${clientId}')" class="button danger">
+                    <i class="fas fa-trash"></i> Delete Client
+                </button>
+                <div class="footer-right">
+                    <button onclick="closeClientModal()" class="button secondary">Cancel</button>
+                    <button onclick="saveClient()" class="button primary">Save Changes</button>
+                </div>
+            `;
+        }
+
         updateStatusText(client.isActive);
-
-        // Store the client ID for the save function
-        document.getElementById('clientForm').dataset.clientId = clientId;
-
-        // Update modal footer to include delete button
-        const modalFooter = document.querySelector('.modal-footer');
-        modalFooter.innerHTML = `
-            <button onclick="deleteClient('${clientId}')" class="button danger">
-                <i class="fas fa-trash"></i> Delete Client
-            </button>
-            <div class="footer-right">
-                <button onclick="closeClientModal()" class="button secondary">Cancel</button>
-                <button onclick="saveClient()" class="button primary">Save Changes</button>
-            </div>
-        `;
-
-        // Show the modal
-        document.getElementById('clientModal').style.display = 'block';
+        modal.style.display = 'block';
     } catch (error) {
         console.error('Error loading client details:', error);
-        alert('Error loading client details. Please try again.');
-    }
-}
-
-// View Client Details Function
-async function viewClientDetails(clientId) {
-    try {
-        const doc = await db.collection('clients').doc(clientId).get();
-        const client = doc.data();
-        
-        const statusClass = client.isActive ? 'active' : 'inactive';
-        const statusText = client.isActive ? 'Active' : 'Inactive';
-        
-        // Create and show a view-only modal
-        const viewModal = document.createElement('div');
-        viewModal.className = 'modal';
-        viewModal.style.display = 'block';
-        viewModal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Client Details</h3>
-                    <button onclick="this.closest('.modal').remove()" class="close-button">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="client-details">
-                        <div class="detail-header">
-                            <div class="detail-group">
-                                <label>Name</label>
-                                <p>${client.firstName} ${client.lastName}</p>
-                            </div>
-                            <span class="status-badge ${statusClass}">
-                                <i class="fas fa-circle"></i> ${statusText}
-                            </span>
-                        </div>
-                        <div class="detail-group">
-                            <label>Email</label>
-                            <p>${client.email}</p>
-                        </div>
-                        <div class="detail-group">
-                            <label>Phone</label>
-                            <p>${client.phone}</p>
-                        </div>
-                        <div class="detail-group">
-                            <label>Address</label>
-                            <p>${client.address.street}<br>
-                               ${client.address.city}, ${client.address.state} ${client.address.zip}</p>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-group">
-                                <label>Start Date</label>
-                                <p>${new Date(client.startDate).toLocaleDateString()}</p>
-                            </div>
-                            ${client.endDate ? `
-                            <div class="detail-group">
-                                <label>End Date</label>
-                                <p>${new Date(client.endDate).toLocaleDateString()}</p>
-                            </div>
-                            ` : ''}
-                        </div>
-                        <div class="detail-group">
-                            <label>Notes</label>
-                            <p>${client.notes || 'No notes available'}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button onclick="this.closest('.modal').remove()" class="button secondary">Close</button>
-                    <button onclick="editClient('${clientId}'); this.closest('.modal').remove()" class="button primary">Edit</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(viewModal);
-    } catch (error) {
-        console.error('Error loading client details:', error);
-        alert('Error loading client details. Please try again.');
     }
 }
 

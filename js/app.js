@@ -65,22 +65,6 @@ async function loadDashboardData() {
     }
 }
 
-async function loadClients() {
-    const clientsList = document.getElementById('clientsList');
-    try {
-        const snapshot = await db.collection('clients').get();
-        clientsList.innerHTML = '';
-        
-        snapshot.forEach(doc => {
-            const client = doc.data();
-            const clientCard = createClientCard(doc.id, client);
-            clientsList.appendChild(clientCard);
-        });
-    } catch (error) {
-        console.error('Error loading clients:', error);
-    }
-}
-
 async function loadVisits() {
     const visitsList = document.getElementById('visitsList');
     try {
@@ -135,40 +119,6 @@ async function loadMarketingCampaigns() {
     }
 }
 
-// Card Creation Functions
-function createClientCard(id, client) {
-    const card = document.createElement('div');
-    card.className = 'data-card client-card';
-    const statusClass = client.isActive ? 'active' : 'inactive';
-    const statusText = client.isActive ? 'Active' : 'Inactive';
-    
-    card.innerHTML = `
-        <div class="client-info">
-            <div class="client-header">
-                <h3>${client.firstName} ${client.lastName} <span class="status-badge ${statusClass}">
-                    <i class="fas fa-circle"></i> ${statusText}
-                </span></h3>
-            </div>
-            <div class="contact-info">
-                <p><i class="fas fa-envelope"></i> ${client.email}</p>
-                <p><i class="fas fa-phone"></i> ${client.phone}</p>
-                <p><i class="fas fa-map-marker-alt"></i> ${client.address.street}, ${client.address.city}, ${client.address.state} ${client.address.zip}</p>
-                <p><i class="fas fa-calendar"></i> Start Date: ${new Date(client.startDate).toLocaleDateString()}</p>
-                ${client.endDate ? `<p><i class="fas fa-calendar-times"></i> End Date: ${new Date(client.endDate).toLocaleDateString()}</p>` : ''}
-            </div>
-        </div>
-        <div class="card-actions">
-            <button onclick="editClient('${id}')" class="button secondary">
-                <i class="fas fa-edit"></i> Edit
-            </button>
-            <button onclick="viewClientDetails('${id}')" class="button primary">
-                <i class="fas fa-eye"></i> View
-            </button>
-        </div>
-    `;
-    return card;
-}
-
 function createVisitCard(id, visit, clientName) {
     const card = document.createElement('div');
     card.className = 'data-card';
@@ -219,11 +169,6 @@ function createCampaignCard(id, campaign) {
 }
 
 // Form Display Functions
-function showAddClientForm() {
-    // Implementation will be added later
-    console.log('Add client form to be implemented');
-}
-
 function showAddVisitForm() {
     // Implementation will be added later
     console.log('Add visit form to be implemented');
