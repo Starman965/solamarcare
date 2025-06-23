@@ -310,13 +310,13 @@
 
                         <!-- Form Actions -->
                         <div class="invoice-form-actions">
-                            <button onclick="saveInvoiceDraft()" class="button secondary">
+                            <button type="button" onclick="saveInvoiceDraft(event)" class="button secondary">
                                 <i class="fas fa-save"></i> Save Draft
                             </button>
-                            <button onclick="toggleInvoiceView('list')" class="button secondary">
+                            <button type="button" onclick="toggleInvoiceView('list')" class="button secondary">
                                 <i class="fas fa-times"></i> Close
                             </button>
-                            <button onclick="showPrintPreview()" class="button primary">
+                            <button type="button" onclick="showPrintPreview()" class="button primary">
                                 <i class="fas fa-print"></i> Print Preview
                             </button>
                         </div>

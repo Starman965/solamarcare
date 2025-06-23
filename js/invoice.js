@@ -4,7 +4,7 @@ let currentInvoice = {
     items: [],
     subtotal: 0,
     total: 0,
-    clientId: null,
+    accountId: null,
     dueDate: 'Upon Receipt',
     status: 'draft',
     createdAt: null,
@@ -34,7 +34,7 @@ function checkUnsavedChanges() {
 }
 
 // Toggle between list and create views
-function toggleInvoiceView(view) {
+function toggleInvoiceView(view, skipChangeCheck = false) {
     const listView = document.getElementById('invoiceListView');
     const createView = document.getElementById('invoiceCreateView');
     const dashboardSection = document.getElementById('dashboardSection');
@@ -50,7 +50,7 @@ function toggleInvoiceView(view) {
         isInvoiceFormOpen = true;
         initializeCreateView();
     } else {
-        if (isInvoiceFormOpen && !checkUnsavedChanges()) {
+        if (isInvoiceFormOpen && !skipChangeCheck && !checkUnsavedChanges()) {
             return; // Stay on current view if user cancels
         }
         listView.style.display = 'block';
@@ -67,7 +67,7 @@ function initializeCreateView() {
         items: [],
         subtotal: 0,
         total: 0,
-        clientId: null,
+        accountId: null,
         dueDate: 'Upon Receipt',
         status: 'draft',
         createdAt: null,
@@ -133,30 +133,8 @@ async function loadInvoices() {
         // Process each invoice
         for (const doc of invoicesSnapshot.docs) {
             const invoice = doc.data();
-            
-            if (!invoice || !invoice.accountId) {
-                console.warn('Invalid invoice data:', { id: doc.id, invoice });
-                continue;
-            }
-
-            try {
-                // Find client by their accountId field
-                const clientsSnapshot = await db.collection('clients')
-                    .where('accountId', '==', invoice.accountId)
-                    .limit(1)
-                    .get();
-
-                if (clientsSnapshot.empty) {
-                    console.warn('Client not found for invoice:', { id: doc.id, accountId: invoice.accountId });
-                    continue;
-                }
-
-                const clientData = clientsSnapshot.docs[0].data();
-                const row = createInvoiceRow(doc.id, invoice, clientData);
-                if (row) tableBody.appendChild(row);
-            } catch (error) {
-                console.error('Error processing invoice:', { id: doc.id, error });
-            }
+            const row = createInvoiceRow(doc.id, invoice);
+            if (row) tableBody.appendChild(row);
         }
 
     } catch (error) {
@@ -166,9 +144,9 @@ async function loadInvoices() {
 }
 
 // Create invoice table row
-function createInvoiceRow(id, invoice, clientData) {
-    if (!invoice || !clientData) {
-        console.error('Invalid invoice or client data:', { id, invoice, clientData });
+function createInvoiceRow(id, invoice) {
+    if (!invoice) {
+        console.error('Invalid invoice data:', { id, invoice });
         return null;
     }
 
@@ -190,8 +168,8 @@ function createInvoiceRow(id, invoice, clientData) {
             <span class="invoice-number">${invoiceNumber}</span>
         </td>
         <td>
-            ${clientData.firstName || ''} ${clientData.lastName || ''}
-            <div class="client-address">${clientData.address?.street || 'No address'}</div>
+            ${invoice.clientName || 'Unknown Client'}
+            <div class="client-address">${invoice.clientAddress?.street || 'No address'}</div>
         </td>
         <td class="amount">$${total.toFixed(2)}</td>
         <td><span class="status-badge ${statusClass}">${status.toUpperCase()}</span></td>
@@ -350,121 +328,47 @@ function updateTotals() {
     currentInvoice.total = total;
 }
 
-// Save invoice
-async function saveInvoiceDraft() {
-    try {
-        // Get client selection
-        const clientSelect = document.getElementById('invoiceClient');
-        if (!clientSelect.value) {
-            alert('Please select a client');
-            return;
-        }
-
-        // Get the client's actual accountId from their document
-        const clientDoc = await db.collection('clients').doc(clientSelect.value).get();
-        const clientData = clientDoc.data();
-        if (!clientData || !clientData.accountId) {
-            alert('Error: Client account ID not found');
-            return;
-        }
-        
-        // Get all invoice items
-        const items = [];
-        const tbody = document.getElementById('invoiceItemsBody');
-        Array.from(tbody.children).forEach(row => {
-            const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
-            const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
-            items.push({
-                quantity: quantity,
-                description: row.querySelector('.description-input').value || '',
-                unitPrice: unitPrice,
-                lineTotal: quantity * unitPrice
-            });
-        });
-        
-        // Calculate totals
-        const subtotal = calculateSubtotal(items);
-
-        // Get selected status
-        const statusSelect = document.getElementById('invoiceStatus');
-        const status = statusSelect ? statusSelect.value : 'draft';
-
-        // Get due date information
-        const dueDateType = document.getElementById('dueDateType').value;
-        const dueDate = dueDateType === 'specific_date' ? 
-            document.getElementById('specificDueDate').value : 'upon_receipt';
-        
-        // Create invoice data structure
-        const invoiceData = {
-            accountId: clientData.accountId,  // Using the client's actual accountId field
-            items: items,
-            status: status,
-            dueDateType: dueDateType,
-            dueDate: dueDate,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            subtotal: subtotal,
-            total: subtotal // No tax for now
-        };
-
-        // If it's a new invoice, add createdAt and generate invoice number
-        if (!currentInvoice.id) {
-            invoiceData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            invoiceData.invoiceNumber = await generateInvoiceNumber();
-            // Save to Firebase in the top-level invoices collection
-            await db.collection('invoices').add(invoiceData);
-        } else {
-            // Update existing invoice
-            // Keep the original invoice number and created date
-            invoiceData.invoiceNumber = currentInvoice.invoiceNumber;
-            invoiceData.createdAt = currentInvoice.createdAt;
-            // Update the document
-            await db.collection('invoices').doc(currentInvoice.id).update(invoiceData);
-        }
-        
-        // Return to list view - toggleInvoiceView will handle the refresh
-        toggleInvoiceView('list');
-        
-        resetInvoiceChanges();
-        return true;
-    } catch (error) {
-        console.error('Error saving invoice:', error);
-        alert('Error saving invoice: ' + error.message);
-        return false;
-    }
-}
-
-// Helper function to calculate subtotal
-function calculateSubtotal(items) {
-    return items.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
-}
-
 // Update client details when selected
 async function updateClientDetails() {
+    console.log('updateClientDetails: Starting client details update');
     const clientSelect = document.getElementById('invoiceClient');
     const clientDetailsSection = document.getElementById('clientDetailsSection');
     
+    console.log('updateClientDetails: Selected client ID:', clientSelect.value);
+    
     if (!clientSelect.value) {
+        console.log('updateClientDetails: No client selected, hiding details section');
         clientDetailsSection.style.display = 'none';
         return;
     }
     
     try {
+        console.log('updateClientDetails: Fetching client document for ID:', clientSelect.value);
         const clientDoc = await db.collection('clients').doc(clientSelect.value).get();
         const clientData = clientDoc.data();
         
+        console.log('updateClientDetails: Retrieved client data:', clientData);
+        
         if (!clientData) {
-            console.error('Client data not found');
+            console.error('updateClientDetails: Client data not found');
             return;
         }
         
         // Format the data
         const name = `${clientData.firstName || ''} ${clientData.lastName || ''}`.trim();
-        const street = clientData.address.street || '';
+        const street = clientData.address?.street || '';
         const cityStateZip = [
-            clientData.address.city || '',
-            clientData.address.state || '',
-            clientData.address.zip || ''
+            clientData.address?.city || '',
+            clientData.address?.state || '',
+            clientData.address?.zip || ''
         ].filter(Boolean).join(', ');
+        
+        console.log('updateClientDetails: Formatted client data:', {
+            name,
+            street,
+            cityStateZip,
+            accountId: clientData.accountId
+        });
         
         // Update the elements
         document.getElementById('clientName').textContent = name;
@@ -475,22 +379,223 @@ async function updateClientDetails() {
         clientDetailsSection.style.display = 'block';
         clientDetailsSection.dataset.accountId = clientData.accountId;
         
-        // Log for debugging
-        console.log('Client details updated:', {
-            name,
-            street,
-            cityStateZip,
-            elements: {
-                name: document.getElementById('clientName').textContent,
-                street: document.getElementById('clientStreetAddress').textContent,
-                cityStateZip: document.getElementById('clientCityStateZip').textContent
-            }
+        console.log('updateClientDetails: Updated DOM elements and stored accountId:', {
+            displayedName: document.getElementById('clientName').textContent,
+            displayedStreet: document.getElementById('clientStreetAddress').textContent,
+            displayedCityStateZip: document.getElementById('clientCityStateZip').textContent,
+            storedAccountId: clientDetailsSection.dataset.accountId
         });
         
     } catch (error) {
-        console.error('Error updating client details:', error);
+        console.error('updateClientDetails: Error updating client details:', error);
         alert('Error updating client details: ' + error.message);
     }
+}
+
+// Initialize invoice section
+function initializeInvoiceSection() {
+    console.log('Initializing invoice section');
+    
+    // Set up form submission handler
+    const invoiceForm = document.getElementById('invoiceForm');
+    if (invoiceForm) {
+        invoiceForm.onsubmit = function(e) {
+            e.preventDefault(); // Prevent form submission
+            return false;
+        };
+    }
+    
+    loadClientDropdown();
+    addInvoiceItem(); // Add first row
+}
+
+// Save invoice
+async function saveInvoiceDraft(e) {
+    // Prevent default button behavior
+    if (e) e.preventDefault();
+    
+    console.log('saveInvoiceDraft: Starting invoice save process');
+    
+    try {
+        // Get client selection and accountId
+        const clientSelect = document.getElementById('invoiceClient');
+        const clientDetailsSection = document.getElementById('clientDetailsSection');
+        
+        console.log('saveInvoiceDraft: Initial form state:', {
+            selectedClientId: clientSelect.value,
+            clientDetailsSectionDisplay: clientDetailsSection.style.display,
+            storedAccountId: clientDetailsSection.dataset.accountId
+        });
+        
+        if (!clientSelect.value) {
+            console.error('saveInvoiceDraft: No client selected');
+            alert('Please select a client');
+            return;
+        }
+
+        const accountId = clientDetailsSection.dataset.accountId;
+        console.log('saveInvoiceDraft: Retrieved accountId:', accountId);
+        
+        if (!accountId) {
+            console.error('saveInvoiceDraft: No accountId found in dataset');
+            alert('Error: Client account ID not found');
+            return;
+        }
+
+        // Get client details from the display elements
+        const clientName = document.getElementById('clientName').textContent;
+        const clientStreetAddress = document.getElementById('clientStreetAddress').textContent;
+        const clientCityStateZip = document.getElementById('clientCityStateZip').textContent;
+        const [city = '', state = '', zip = ''] = clientCityStateZip.split(',').map(s => s.trim());
+        
+        console.log('saveInvoiceDraft: Retrieved client details from DOM:', {
+            clientName,
+            clientStreetAddress,
+            clientCityStateZip,
+            parsedAddress: { city, state, zip }
+        });
+        
+        // Get all invoice items
+        const items = [];
+        const tbody = document.getElementById('invoiceItemsBody');
+        
+        console.log('saveInvoiceDraft: Processing invoice items from table body:', {
+            numberOfRows: tbody.children.length
+        });
+        
+        Array.from(tbody.children).forEach((row, index) => {
+            const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            const description = row.querySelector('.description-input').value || '';
+            const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+            const lineTotal = quantity * unitPrice;
+            
+            console.log('saveInvoiceDraft: Processing row', index + 1, {
+                quantity,
+                description,
+                unitPrice,
+                lineTotal
+            });
+            
+            // Only add items that have either a description or a price
+            if (description || unitPrice > 0) {
+                items.push({
+                    quantity,
+                    description,
+                    unitPrice,
+                    lineTotal
+                });
+            }
+        });
+
+        console.log('saveInvoiceDraft: Processed items:', items);
+
+        if (items.length === 0) {
+            console.error('saveInvoiceDraft: No valid items found');
+            alert('Please add at least one item to the invoice');
+            return;
+        }
+        
+        // Calculate totals
+        const subtotal = calculateSubtotal(items);
+        console.log('saveInvoiceDraft: Calculated subtotal:', subtotal);
+
+        // Get selected status
+        const statusSelect = document.getElementById('invoiceStatus');
+        const status = statusSelect ? statusSelect.value : 'draft';
+
+        // Get due date information
+        const dueDateType = document.getElementById('dueDateType').value;
+        const dueDate = dueDateType === 'specific_date' ? 
+            document.getElementById('specificDueDate').value : 'upon_receipt';
+        
+        console.log('saveInvoiceDraft: Retrieved form values:', {
+            status,
+            dueDateType,
+            dueDate
+        });
+        
+        // Create invoice data structure
+        const invoiceData = {
+            accountId: accountId,
+            clientName: clientName,
+            clientAddress: {
+                street: clientStreetAddress,
+                city: city,
+                state: state,
+                zip: zip
+            },
+            items: items,
+            status: status,
+            dueDateType: dueDateType,
+            dueDate: dueDate,
+            subtotal: subtotal,
+            total: subtotal, // No tax for now
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        console.log('saveInvoiceDraft: Created invoice data:', invoiceData);
+
+        // If it's a new invoice
+        if (!currentInvoice.id) {
+            console.log('saveInvoiceDraft: Creating new invoice');
+            // Generate new invoice number and add creation timestamp
+            invoiceData.invoiceNumber = await generateInvoiceNumber();
+            invoiceData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            
+            console.log('saveInvoiceDraft: Generated invoice number:', invoiceData.invoiceNumber);
+            
+            // Save to Firebase in the top-level invoices collection
+            console.log('saveInvoiceDraft: Attempting to save new invoice to Firebase');
+            const docRef = await db.collection('invoices').add(invoiceData);
+            console.log('saveInvoiceDraft: Successfully created new invoice with ID:', docRef.id);
+        } else {
+            console.log('saveInvoiceDraft: Updating existing invoice:', currentInvoice.id);
+            // Update existing invoice
+            invoiceData.invoiceNumber = currentInvoice.invoiceNumber;
+            invoiceData.createdAt = currentInvoice.createdAt;
+            
+            // Update the document
+            console.log('saveInvoiceDraft: Attempting to update invoice in Firebase');
+            await db.collection('invoices').doc(currentInvoice.id).update(invoiceData);
+            console.log('saveInvoiceDraft: Successfully updated invoice');
+        }
+        
+        // Reset current invoice
+        currentInvoice = {
+            items: [],
+            subtotal: 0,
+            total: 0,
+            accountId: null,
+            dueDate: 'Upon Receipt',
+            status: 'draft',
+            createdAt: null,
+            invoiceNumber: null
+        };
+        
+        console.log('saveInvoiceDraft: Reset current invoice state');
+        
+        // Reset changes and return to list view
+        resetInvoiceChanges();
+        console.log('saveInvoiceDraft: Reset change tracking');
+        
+        // Return to list view and refresh, skipping the unsaved changes check
+        console.log('saveInvoiceDraft: Switching to list view and refreshing');
+        toggleInvoiceView('list', true);
+        loadInvoices();
+        
+        console.log('saveInvoiceDraft: Successfully completed invoice save process');
+        return true;
+    } catch (error) {
+        console.error('saveInvoiceDraft: Error saving invoice:', error);
+        console.error('saveInvoiceDraft: Error stack:', error.stack);
+        alert('Error saving invoice: ' + error.message);
+        return false;
+    }
+}
+
+// Helper function to calculate subtotal
+function calculateSubtotal(items) {
+    return items.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
 }
 
 // Toggle due date field visibility
@@ -747,12 +852,6 @@ async function showPrintPreview() {
     }
 }
 
-// Initialize invoice section
-function initializeInvoiceSection() {
-    loadClientDropdown();
-    addInvoiceItem(); // Add first row
-}
-
 // Modify showSection function to handle invoice loading
 function showSection(sectionName) {
     const sections = ['clients', 'visits', 'invoices', 'marketing'];
@@ -805,29 +904,19 @@ async function editInvoice(id) {
         // Switch to create view
         toggleInvoiceView('create');
         
-        // Get client data first
+        // Load all clients into dropdown first
+        await loadClientDropdown();
+        
+        // Find and select the client by accountId
+        const clientSelect = document.getElementById('invoiceClient');
         const clientsSnapshot = await db.collection('clients')
             .where('accountId', '==', invoice.accountId)
             .limit(1)
             .get();
 
-        if (clientsSnapshot.empty) {
-            alert('Client not found');
-            return;
+        if (!clientsSnapshot.empty) {
+            clientSelect.value = clientsSnapshot.docs[0].id;
         }
-
-        const clientData = clientsSnapshot.docs[0].data();
-        
-        // Load all clients into dropdown first
-        await loadClientDropdown();
-        
-        // Set the selected client
-        const clientSelect = document.getElementById('invoiceClient');
-        Array.from(clientSelect.options).forEach(option => {
-            if (option.textContent === `${clientData.firstName} ${clientData.lastName}`) {
-                option.selected = true;
-            }
-        });
 
         // Set the invoice status
         const statusSelect = document.getElementById('invoiceStatus');
@@ -841,22 +930,17 @@ async function editInvoice(id) {
             // Show the section
             clientDetailsSection.style.display = 'block';
             
-            // Format the address components
-            const name = `${clientData.firstName || ''} ${clientData.lastName || ''}`.trim();
-            const street = clientData.address.street || '';
-            const cityStateZip = [
-                clientData.address.city || '',
-                clientData.address.state || '',
-                clientData.address.zip || ''
+            // Update the display elements
+            document.getElementById('clientName').textContent = invoice.clientName;
+            document.getElementById('clientStreetAddress').textContent = invoice.clientAddress?.street || '';
+            document.getElementById('clientCityStateZip').textContent = [
+                invoice.clientAddress?.city || '',
+                invoice.clientAddress?.state || '',
+                invoice.clientAddress?.zip || ''
             ].filter(Boolean).join(', ');
             
-            // Update the display elements with new IDs
-            document.getElementById('clientName').textContent = name;
-            document.getElementById('clientStreetAddress').textContent = street;
-            document.getElementById('clientCityStateZip').textContent = cityStateZip;
-            
             // Store the accountId for reference
-            clientDetailsSection.dataset.accountId = clientData.accountId;
+            clientDetailsSection.dataset.accountId = invoice.accountId;
         }
         
         // Clear existing items
@@ -871,13 +955,14 @@ async function editInvoice(id) {
                     <input type="number" 
                            min="1" 
                            value="${item.quantity}" 
-                           onchange="updateLineTotal(${tbody.children.length})" 
+                           onchange="updateLineTotal(${tbody.children.length}); trackInvoiceChanges();" 
                            class="quantity-input">
                 </td>
                 <td>
                     <input type="text" 
                            value="${item.description}" 
-                           class="description-input" 
+                           class="description-input"
+                           onchange="trackInvoiceChanges();" 
                            required>
                 </td>
                 <td>
@@ -885,13 +970,13 @@ async function editInvoice(id) {
                            min="0" 
                            step="0.01" 
                            value="${item.unitPrice}" 
-                           onchange="updateLineTotal(${tbody.children.length})" 
+                           onchange="updateLineTotal(${tbody.children.length}); trackInvoiceChanges();" 
                            class="unit-price">
                 </td>
                 <td class="line-total read-only">$${item.lineTotal.toFixed(2)}</td>
                 <td>
                     <button type="button" 
-                            onclick="deleteInvoiceItem(${tbody.children.length})" 
+                            onclick="deleteInvoiceItem(${tbody.children.length}); trackInvoiceChanges();" 
                             class="delete-row">
                         <i class="fas fa-trash"></i>
                     </button>
