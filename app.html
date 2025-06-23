@@ -84,7 +84,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3 id="modalTitle">Add New Client</h3>
-                        <button onclick="closeClientModal()" class="close-button">
+                        <button onclick="closeClientModal()" class="close-button" title="Close">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -166,27 +166,6 @@
                 </div>
             </div>
 
-            <!-- Client View Modal -->
-            <div id="clientViewModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="viewModalTitle">Client Details</h3>
-                        <button onclick="closeViewModal()" class="close-button">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body" id="clientViewContent">
-                        <!-- Content will be dynamically populated -->
-                    </div>
-                    <div class="modal-footer">
-                        <button onclick="editFromView()" class="button primary">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button onclick="closeViewModal()" class="button secondary">Close</button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Visits Section -->
             <section id="visitsSection" class="dashboard-section" style="display: none;">
                 <h2>Service Visits</h2>
@@ -212,21 +191,23 @@
                 </div>
 
                 <!-- Invoice List View -->
-                <div id="invoiceListView" class="data-list">
-                    <table class="invoice-table">
-                        <thead>
-                            <tr>
-                                <th>Invoice #</th>
-                                <th>Client Name</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="invoiceTableBody">
-                            <!-- Invoices will be listed here -->
-                        </tbody>
-                    </table>
+                <div id="invoiceListView" class="invoice-section">
+                    <div class="invoice-table-container">
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Client Name</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoiceTableBody">
+                                <!-- Invoices will be listed here -->
+                            </tbody>
+                        </table>
+                    </div>
                     <div id="emptyInvoiceState" class="empty-state" style="display: none;">
                         <i class="fas fa-file-invoice"></i>
                         <h3>No Invoices Yet</h3>
@@ -297,7 +278,7 @@
                                         <th>Quantity</th>
                                         <th>Description</th>
                                         <th>Unit Price</th>
-                                        <th>Line Total</th>
+                                        <th style="text-align: right">Line Total</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -316,25 +297,23 @@
                                 <span>Subtotal:</span>
                                 <span id="invoiceSubtotal">$0.00</span>
                             </div>
-                            <div class="totals-row">
+                            <div class="totals-row total">
                                 <span>Total:</span>
                                 <span id="invoiceTotal">$0.00</span>
                             </div>
                         </div>
 
-                        <!-- Invoice Actions -->
-                        <div class="invoice-actions">
-                            <button type="button" onclick="toggleInvoiceView('list')" class="button secondary">
+                        <!-- Form Actions -->
+                        <div class="invoice-form-actions">
+                            <button onclick="toggleInvoiceView('list')" class="button secondary back-button">
                                 <i class="fas fa-arrow-left"></i> Back to List
                             </button>
-                            <div class="action-group">
-                                <button type="button" onclick="saveInvoiceDraft()" class="button secondary">
-                                    <i class="fas fa-save"></i> Save Draft
-                                </button>
-                                <button type="button" onclick="showPrintPreview()" class="button primary">
-                                    <i class="fas fa-file-invoice"></i> Print Preview
-                                </button>
-                            </div>
+                            <button onclick="saveInvoiceDraft()" class="button secondary">
+                                <i class="fas fa-save"></i> Save Draft
+                            </button>
+                            <button onclick="showPrintPreview()" class="button primary">
+                                <i class="fas fa-print"></i> Print Preview
+                            </button>
                         </div>
                     </form>
                 </div>

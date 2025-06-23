@@ -133,6 +133,8 @@ function createInvoiceRow(id, invoice, clientData) {
     }
 
     const row = document.createElement('tr');
+    row.onclick = () => editInvoice(id);
+    row.style.cursor = 'pointer';
     
     // Use the actual invoice number from the data
     const invoiceNumber = invoice.invoiceNumber || `INV-${id.slice(0, 8)}`;
@@ -153,13 +155,10 @@ function createInvoiceRow(id, invoice, clientData) {
         <td>$${total.toFixed(2)}</td>
         <td><span class="status-badge ${statusClass}">${status.toUpperCase()}</span></td>
         <td class="action-buttons">
-            <button onclick="editInvoice('${id}')" class="card-button" title="Edit">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button onclick="printInvoice('${id}')" class="card-button" title="Print">
+            <button onclick="event.stopPropagation(); printInvoice('${id}')" class="card-button" title="Print">
                 <i class="fas fa-print"></i>
             </button>
-            <button onclick="deleteInvoice('${id}')" class="card-button delete-button" title="Delete">
+            <button onclick="event.stopPropagation(); deleteInvoice('${id}')" class="card-button delete-button" title="Delete">
                 <i class="fas fa-trash"></i>
             </button>
         </td>

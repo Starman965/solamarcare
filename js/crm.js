@@ -441,6 +441,7 @@ async function filterClients(searchTerm) {
 function createClientCard(id, client) {
     const card = document.createElement('div');
     card.className = 'data-card client-card';
+    card.onclick = () => editClient(id);
     const statusClass = client.isActive ? 'active' : 'inactive';
     const statusText = client.isActive ? 'Active' : 'Inactive';
     
@@ -459,14 +460,6 @@ function createClientCard(id, client) {
                 <p><i class="fas fa-calendar"></i> Start Date: ${new Date(client.startDate).toLocaleDateString()}</p>
                 ${client.endDate ? `<p><i class="fas fa-calendar-times"></i> End Date: ${new Date(client.endDate).toLocaleDateString()}</p>` : ''}
             </div>
-        </div>
-        <div class="card-actions">
-            <button onclick="editClient('${id}')" class="button secondary">
-                <i class="fas fa-edit"></i> Edit
-            </button>
-            <button onclick="viewClientDetails('${id}')" class="button primary">
-                <i class="fas fa-eye"></i> View
-            </button>
         </div>
     `;
     return card;
