@@ -11,20 +11,52 @@ let currentInvoice = {
     invoiceNumber: null
 };
 
+// Add state tracking at the top of the file
+let hasUnsavedChanges = false;
+let isInvoiceFormOpen = false;
+
+// Track changes in the form
+function trackInvoiceChanges() {
+    hasUnsavedChanges = true;
+}
+
+// Reset change tracking
+function resetInvoiceChanges() {
+    hasUnsavedChanges = false;
+}
+
+// Check for unsaved changes
+function checkUnsavedChanges() {
+    if (hasUnsavedChanges) {
+        return confirm('You have unsaved changes. Do you want to leave without saving?');
+    }
+    return true;
+}
+
 // Toggle between list and create views
 function toggleInvoiceView(view) {
     const listView = document.getElementById('invoiceListView');
     const createView = document.getElementById('invoiceCreateView');
+    const dashboardSection = document.getElementById('dashboardSection');
+    
+    // Ensure we're in the dashboard context
+    if (!dashboardSection || dashboardSection.style.display === 'none') {
+        return; // Don't toggle if we're not in the dashboard
+    }
     
     if (view === 'create') {
         listView.style.display = 'none';
         createView.style.display = 'block';
+        isInvoiceFormOpen = true;
         initializeCreateView();
     } else {
+        if (isInvoiceFormOpen && !checkUnsavedChanges()) {
+            return; // Stay on current view if user cancels
+        }
         listView.style.display = 'block';
         createView.style.display = 'none';
-        // Always reload invoices when showing list view
-        loadInvoices();
+        isInvoiceFormOpen = false;
+        resetInvoiceChanges();
     }
 }
 
@@ -44,7 +76,14 @@ function initializeCreateView() {
     
     // Clear form
     const form = document.getElementById('invoiceForm');
-    if (form) form.reset();
+    if (form) {
+        form.reset();
+        // Add change listeners to all form inputs
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', trackInvoiceChanges);
+        });
+    }
     
     // Clear items
     const tbody = document.getElementById('invoiceItemsBody');
@@ -58,8 +97,9 @@ function initializeCreateView() {
     loadClientDropdown();
     addInvoiceItem();
     
-    // Reset totals
+    // Reset totals and change tracking
     updateTotals();
+    resetInvoiceChanges();
 }
 
 // Load and display invoices
@@ -134,7 +174,6 @@ function createInvoiceRow(id, invoice, clientData) {
 
     const row = document.createElement('tr');
     row.onclick = () => editInvoice(id);
-    row.style.cursor = 'pointer';
     
     // Use the actual invoice number from the data
     const invoiceNumber = invoice.invoiceNumber || `INV-${id.slice(0, 8)}`;
@@ -147,18 +186,20 @@ function createInvoiceRow(id, invoice, clientData) {
     const statusClass = getStatusClass(status);
     
     row.innerHTML = `
-        <td>${invoiceNumber}</td>
         <td>
-            ${clientData.firstName || ''} ${clientData.lastName || ''}<br>
-            <small class="text-muted">${clientData.address?.street || 'No address'}</small>
+            <span class="invoice-number">${invoiceNumber}</span>
         </td>
-        <td>$${total.toFixed(2)}</td>
+        <td>
+            ${clientData.firstName || ''} ${clientData.lastName || ''}
+            <div class="client-address">${clientData.address?.street || 'No address'}</div>
+        </td>
+        <td class="amount">$${total.toFixed(2)}</td>
         <td><span class="status-badge ${statusClass}">${status.toUpperCase()}</span></td>
-        <td class="action-buttons">
-            <button onclick="event.stopPropagation(); printInvoice('${id}')" class="card-button" title="Print">
+        <td class="actions">
+            <button onclick="event.stopPropagation(); printInvoice('${id}')" class="action-button" title="Print">
                 <i class="fas fa-print"></i>
             </button>
-            <button onclick="event.stopPropagation(); deleteInvoice('${id}')" class="card-button delete-button" title="Delete">
+            <button onclick="event.stopPropagation(); deleteInvoice('${id}')" class="action-button delete" title="Delete">
                 <i class="fas fa-trash"></i>
             </button>
         </td>
@@ -234,13 +275,14 @@ function addInvoiceItem() {
             <input type="number" 
                    min="1" 
                    value="1" 
-                   onchange="updateLineTotal(${rowIndex})" 
+                   onchange="updateLineTotal(${rowIndex}); trackInvoiceChanges();" 
                    class="quantity-input">
         </td>
         <td>
             <input type="text" 
                    placeholder="Item description" 
-                   class="description-input" 
+                   class="description-input"
+                   onchange="trackInvoiceChanges();" 
                    required>
         </td>
         <td>
@@ -248,13 +290,13 @@ function addInvoiceItem() {
                    min="0" 
                    step="0.01" 
                    placeholder="0.00" 
-                   onchange="updateLineTotal(${rowIndex})" 
+                   onchange="updateLineTotal(${rowIndex}); trackInvoiceChanges();" 
                    class="unit-price">
         </td>
         <td class="line-total read-only">$0.00</td>
         <td>
             <button type="button" 
-                    onclick="deleteInvoiceItem(${rowIndex})" 
+                    onclick="deleteInvoiceItem(${rowIndex}); trackInvoiceChanges();" 
                     class="delete-row">
                 <i class="fas fa-trash"></i>
             </button>
@@ -263,6 +305,7 @@ function addInvoiceItem() {
     
     tbody.appendChild(row);
     updateTotals();
+    trackInvoiceChanges();
 }
 
 // Update line total when quantity or price changes
@@ -276,6 +319,7 @@ function updateLineTotal(rowIndex) {
     
     row.querySelector('.line-total').textContent = `$${lineTotal.toFixed(2)}`;
     updateTotals();
+    trackInvoiceChanges();
 }
 
 // Delete invoice item row
@@ -283,6 +327,7 @@ function deleteInvoiceItem(rowIndex) {
     const tbody = document.getElementById('invoiceItemsBody');
     tbody.deleteRow(rowIndex);
     updateTotals();
+    trackInvoiceChanges();
 }
 
 // Update invoice totals
@@ -379,9 +424,12 @@ async function saveInvoiceDraft() {
         // Return to list view - toggleInvoiceView will handle the refresh
         toggleInvoiceView('list');
         
+        resetInvoiceChanges();
+        return true;
     } catch (error) {
         console.error('Error saving invoice:', error);
         alert('Error saving invoice: ' + error.message);
+        return false;
     }
 }
 
@@ -705,9 +753,9 @@ function initializeInvoiceSection() {
     addInvoiceItem(); // Add first row
 }
 
-// Add to the existing showSection function
+// Modify showSection function to handle invoice loading
 function showSection(sectionName) {
-    const sections = ['clients', 'visits', 'invoices', 'marketing', 'createInvoice'];
+    const sections = ['clients', 'visits', 'invoices', 'marketing'];
     sections.forEach(section => {
         const element = document.getElementById(`${section}Section`);
         if (element) {
@@ -715,9 +763,15 @@ function showSection(sectionName) {
         }
     });
     
-    // Initialize invoice section if selected
-    if (sectionName === 'createInvoice') {
-        initializeInvoiceSection();
+    // Load data based on section
+    if (sectionName === 'invoices') {
+        const createView = document.getElementById('invoiceCreateView');
+        const listView = document.getElementById('invoiceListView');
+        
+        // Only load invoices if we're showing the list view
+        if (listView && listView.style.display !== 'none') {
+            loadInvoices();
+        }
     }
 }
 
@@ -1060,5 +1114,17 @@ function populateDueDateFields(invoice) {
         // Handle legacy invoices that don't have the new fields
         dueDateTypeSelect.value = 'upon_receipt';
         specificDateContainer.style.display = 'none';
+    }
+}
+
+// Add navigation handler
+function handleInvoiceNavigation() {
+    if (isInvoiceFormOpen) {
+        if (checkUnsavedChanges()) {
+            toggleInvoiceView('list');
+            showSection('invoices'); // This will handle loading invoices
+        }
+    } else {
+        showSection('invoices');
     }
 } 

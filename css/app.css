@@ -39,26 +39,118 @@ body {
     align-items: center;
     justify-content: center;
     padding: 1rem;
+    background-color: #f8f9fa;
 }
 
 .auth-box {
     background: white;
-    padding: 2rem;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     width: 100%;
     max-width: 400px;
     text-align: center;
 }
 
 .auth-logo {
-    width: 120px;
+    width: 80px;
+    height: 80px;
     margin-bottom: 1.5rem;
 }
 
 .auth-box h2 {
     color: var(--primary-color);
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.auth-form .form-group {
+    text-align: left;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.auth-form input {
+    width: 100%;
+    min-width: 300px; /* Ensure minimum width */
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.auth-form input[type="email"] {
+    width: 100%;
+    min-width: 320px; /* Slightly wider for email field */
+}
+
+.auth-form input:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(0, 75, 141, 0.1);
+    outline: none;
+}
+
+.auth-button {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 0.875rem;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.auth-button:hover {
+    background-color: #003b6f;
+    transform: translateY(-1px);
+}
+
+.auth-button:active {
+    transform: translateY(0);
+}
+
+.auth-links {
+    margin-top: 1.5rem;
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+.auth-links a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.auth-links a:hover {
+    color: #003b6f;
+    text-decoration: underline;
+}
+
+.error-message {
+    color: var(--accent-color);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    text-align: left;
+    min-height: 1.2rem;
 }
 
 /* Dashboard Layout */
@@ -488,6 +580,7 @@ select:disabled {
     justify-content: center;
     padding: 1rem;
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .modal-content {
@@ -500,6 +593,8 @@ select:disabled {
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
+    margin: auto; /* Ensure horizontal centering */
+    transform: translateX(0); /* Reset any transform */
 }
 
 .modal-header {
@@ -788,7 +883,7 @@ select:disabled {
     }
 }
 
-/* Invoice Specific Styles */
+/* Invoice List Styles */
 .invoice-section {
     background: white;
     border-radius: var(--radius-md);
@@ -796,150 +891,105 @@ select:disabled {
     box-shadow: var(--shadow-sm);
 }
 
-.invoice-table-container {
-    overflow-x: auto;
-    margin-top: 1rem;
-    background: white;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-}
-
-.invoice-table {
+.invoice-list-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 800px;
+    margin-top: 1rem;
 }
 
-.invoice-table th {
-    background: #f8f9fa;
-    padding: 1rem;
+.invoice-list-table th {
     text-align: left;
-    font-weight: 600;
-    color: var(--text-color);
+    padding: 1rem;
     border-bottom: 2px solid var(--border-color);
+    color: var(--text-color);
+    font-weight: 600;
+    background: #f8f9fa;
 }
 
-.invoice-table td {
+.invoice-list-table td {
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
     color: var(--text-color);
 }
 
-.invoice-table tr:hover {
+.invoice-list-table tr {
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.invoice-list-table tr:hover {
     background-color: #f8f9fa;
 }
 
-.invoice-table .status-badge {
+.invoice-list-table .invoice-number {
+    color: var(--secondary-color);
+    font-weight: 500;
+}
+
+.invoice-list-table .client-address {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.invoice-list-table .amount {
+    font-weight: 500;
+}
+
+.invoice-list-table .status-badge {
     display: inline-flex;
     align-items: center;
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
     font-size: 0.85rem;
     font-weight: 500;
+    text-transform: uppercase;
 }
 
-.invoice-table .status-badge.draft {
+.invoice-list-table .status-badge.draft {
     background-color: #e2e8f0;
     color: #4a5568;
 }
 
-.invoice-table .status-badge.due {
+.invoice-list-table .status-badge.due {
     background-color: #e6fffa;
     color: #047481;
 }
 
-.invoice-table .status-badge.paid {
+.invoice-list-table .status-badge.paid {
     background-color: #f0fff4;
     color: #2f855a;
 }
 
-.invoice-table .status-badge.past-due {
+.invoice-list-table .status-badge.past-due {
     background-color: #fff5f5;
     color: #c53030;
 }
 
-.invoice-table .action-buttons {
+.invoice-list-table .actions {
     display: flex;
     gap: 0.5rem;
     justify-content: flex-end;
 }
 
-.invoice-table .card-button {
+.invoice-list-table .action-button {
     background: none;
     border: none;
     padding: 0.5rem;
-    cursor: pointer;
     color: var(--text-light);
+    cursor: pointer;
     border-radius: var(--radius-sm);
     transition: all 0.2s ease;
 }
 
-.invoice-table .card-button:hover {
+.invoice-list-table .action-button:hover {
     background-color: #f8f9fa;
     color: var(--text-color);
 }
 
-.invoice-table .card-button.delete-button:hover {
+.invoice-list-table .action-button.delete:hover {
     background-color: #fee2e2;
     color: var(--accent-color);
-}
-
-.invoice-table small.text-muted {
-    color: var(--text-light);
-    font-size: 0.85rem;
-    display: block;
-    margin-top: 0.25rem;
-}
-
-/* Responsive adjustments for invoice table */
-@media (max-width: 768px) {
-    .invoice-table-container {
-        margin: 0 -1rem;
-        border-radius: 0;
-    }
-    
-    .invoice-table {
-        font-size: 0.9rem;
-    }
-    
-    .invoice-table td, 
-    .invoice-table th {
-        padding: 0.75rem;
-    }
-}
-
-.invoice-table tr {
-    transition: all 0.2s ease;
-}
-
-.invoice-table tbody tr:hover {
-    background-color: #f8f9fa;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    position: relative;
-}
-
-.invoice-table tbody tr:active {
-    transform: translateY(0);
-    background-color: #f1f3f5;
-}
-
-.invoice-table td {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-color);
-}
-
-.invoice-table .action-buttons {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-    opacity: 0.7;
-    transition: opacity 0.2s ease;
-}
-
-.invoice-table tr:hover .action-buttons {
-    opacity: 1;
 }
 
 /* Modern Close Button */
@@ -981,8 +1031,8 @@ select:disabled {
     margin-top: 2rem;
 }
 
-.invoice-form-actions .back-button {
-    margin-right: auto;
+.invoice-form-actions .button {
+    min-width: 120px; /* Ensure consistent button widths */
 }
 
 .invoice-totals {
@@ -1019,4 +1069,151 @@ select:disabled {
 
 .invoice-items .line-total {
     text-align: right;
+}
+
+/* Invoice Form Table Styles */
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.invoice-table th,
+.invoice-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.invoice-table th:nth-child(1),
+.invoice-table td:nth-child(1) {
+    width: 100px; /* Quantity column - space for xxx */
+}
+
+.invoice-table th:nth-child(2),
+.invoice-table td:nth-child(2) {
+    width: auto; /* Description column - takes remaining space */
+}
+
+.invoice-table th:nth-child(3),
+.invoice-table td:nth-child(3) {
+    width: 120px; /* Unit Price column - space for $xx.xx */
+}
+
+.invoice-table th:nth-child(4),
+.invoice-table td:nth-child(4) {
+    width: 120px; /* Line Total column */
+    text-align: right;
+}
+
+.invoice-table th:nth-child(5),
+.invoice-table td:nth-child(5) {
+    width: 50px; /* Delete button column */
+    text-align: center;
+}
+
+.invoice-table input[type="number"] {
+    width: 80px; /* Slightly smaller than column width */
+}
+
+.invoice-table input[type="text"] {
+    width: 100%; /* Fill description column */
+}
+
+.invoice-table input[type="number"].unit-price {
+    width: 100px; /* Slightly smaller than column width */
+}
+
+/* Invoice Form Specific Styles */
+#dueDateType,
+#invoiceStatus {
+    width: 150px; /* Enough for "Upon Receipt" and "Past Due" */
+}
+
+.due-date-container {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+#specificDateContainer {
+    flex: 0 0 150px; /* Same width as select for consistency */
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+/* Make form groups respect their content width */
+.form-group {
+    min-width: 0;
+    width: fit-content;
+}
+
+/* Authentication Styles */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper input {
+    padding-right: 2.5rem; /* Make room for the toggle button */
+}
+
+.password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    color: var(--text-light);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: var(--text-color);
+}
+
+.password-toggle:focus {
+    outline: none;
+    color: var(--secondary-color);
+}
+
+.password-toggle.showing i::before {
+    content: "\f070"; /* Font Awesome eye-slash icon */
+}
+
+/* Ensure modal stays centered when scrollbar appears */
+body.modal-open {
+    padding-right: var(--scrollbar-width, 0);
+    overflow: hidden;
+}
+
+/* Add styles for modal animation */
+.modal {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.modal.show .modal-content {
+    transform: translateY(0);
 } 

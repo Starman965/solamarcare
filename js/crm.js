@@ -112,17 +112,6 @@ const crmOperations = {
     }
 };
 
-// Authentication State Observer
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        // User is signed in
-        console.log('User is signed in:', user.email);
-    } else {
-        // User is signed out
-        console.log('User is signed out');
-    }
-});
-
 // Client Modal Functions
 function showAddClientModal() {
     const modal = document.getElementById('clientModal');
@@ -326,7 +315,31 @@ function closeClientModal() {
 }
 
 // Generate Client ID
-function generateClientId() {
+async function generateUniqueClientId() {
+    let attempts = 0;
+    const maxAttempts = 10; // Prevent infinite loops
+    
+    while (attempts < maxAttempts) {
+        const candidateId = generateClientIdNumber();
+        
+        // Check if this ID already exists
+        const snapshot = await db.collection('clients')
+            .where('accountId', '==', candidateId)
+            .limit(1)
+            .get();
+            
+        if (snapshot.empty) {
+            return candidateId; // ID is unique, use it
+        }
+        
+        attempts++;
+    }
+    
+    throw new Error('Unable to generate unique client ID after multiple attempts');
+}
+
+// Generate a candidate client ID number
+function generateClientIdNumber() {
     const min = 100000; // Minimum 6-digit number
     const max = 999999; // Maximum 6-digit number
     const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -372,8 +385,8 @@ async function saveClient() {
             // Update existing client - don't modify the accountId
             await db.collection('clients').doc(clientId).update(clientData);
         } else {
-            // Add new client - generate new accountId
-            clientData.accountId = generateClientId();
+            // Add new client - generate new unique accountId
+            clientData.accountId = await generateUniqueClientId();
             clientData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection('clients').add(clientData);
         }
@@ -382,7 +395,7 @@ async function saveClient() {
         loadClients(); // Refresh the client list
     } catch (error) {
         console.error('Error saving client:', error);
-        alert('Error saving client. Please try again.');
+        alert('Error saving client: ' + error.message);
     }
 }
 
@@ -441,7 +454,10 @@ async function filterClients(searchTerm) {
 function createClientCard(id, client) {
     const card = document.createElement('div');
     card.className = 'data-card client-card';
-    card.onclick = () => editClient(id);
+    card.onclick = () => {
+        editClient(id);
+        showModal('clientModal');
+    };
     const statusClass = client.isActive ? 'active' : 'inactive';
     const statusText = client.isActive ? 'Active' : 'Inactive';
     
@@ -506,9 +522,8 @@ async function editClient(clientId) {
         const modal = document.getElementById('clientModal');
         const modalTitle = document.getElementById('modalTitle');
         const form = document.getElementById('clientForm');
-        const modalBody = modal.querySelector('.modal-body');
 
-        if (!modal || !modalTitle || !form || !modalBody) {
+        if (!modal || !modalTitle || !form) {
             console.error('Required modal elements not found');
             return;
         }
@@ -517,6 +532,10 @@ async function editClient(clientId) {
         form.dataset.clientId = clientId;
 
         // Add Client ID display at the top of the form
+        const existingClientId = form.querySelector('.account-id');
+        if (existingClientId) {
+            existingClientId.remove();
+        }
         const clientIdDisplay = document.createElement('div');
         clientIdDisplay.className = 'account-id';
         clientIdDisplay.style.fontFamily = 'monospace';
@@ -525,7 +544,7 @@ async function editClient(clientId) {
         clientIdDisplay.textContent = `Client ID: ${client.accountId || 'Not Assigned'}`;
         form.insertBefore(clientIdDisplay, form.firstChild);
 
-        // Now that we've set up the form, populate the fields
+        // Populate the fields
         document.getElementById('clientFirstName').value = client.firstName || '';
         document.getElementById('clientLastName').value = client.lastName || '';
         document.getElementById('clientEmail').value = client.email || '';
@@ -556,7 +575,6 @@ async function editClient(clientId) {
         }
 
         updateStatusText(client.isActive);
-        modal.style.display = 'block';
     } catch (error) {
         console.error('Error loading client details:', error);
     }

@@ -27,21 +27,28 @@
         <div class="auth-box">
             <img src="images/solamar_care_logo.png" alt="Solamar Care Logo" class="auth-logo">
             <h2>Solamar Care Management</h2>
-            <div id="loginForm" class="auth-form">
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(); return false;">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" required>
+                    <input type="email" id="email" required autocomplete="email" size="35">
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" required>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="password" required autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
-                <button onclick="handleLogin()" class="auth-button">Login</button>
                 <p id="authError" class="error-message"></p>
+                <button type="submit" class="auth-button">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
                 <p class="auth-links">
                     Don't have an account? <a href="register.html">Register here</a>
                 </p>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -55,7 +62,7 @@
             <div class="nav-menu">
                 <button onclick="showSection('clients')" class="nav-button"><i class="fas fa-users"></i> Clients</button>
                 <button onclick="showSection('visits')" class="nav-button"><i class="fas fa-calendar-check"></i> Visits</button>
-                <button onclick="showSection('invoices')" class="nav-button"><i class="fas fa-file-invoice-dollar"></i> Invoices</button>
+                <button onclick="handleInvoiceNavigation()" class="nav-button"><i class="fas fa-file-invoice-dollar"></i> Invoices</button>
                 <button onclick="showSection('marketing')" class="nav-button"><i class="fas fa-bullhorn"></i> Marketing</button>
                 <button onclick="handleLogout()" class="nav-button logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
@@ -192,22 +199,20 @@
 
                 <!-- Invoice List View -->
                 <div id="invoiceListView" class="invoice-section">
-                    <div class="invoice-table-container">
-                        <table class="invoice-table">
-                            <thead>
-                                <tr>
-                                    <th>Invoice #</th>
-                                    <th>Client Name</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="invoiceTableBody">
-                                <!-- Invoices will be listed here -->
-                            </tbody>
-                        </table>
-                    </div>
+                    <table class="invoice-list-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Client Name</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceTableBody">
+                            <!-- Invoices will be listed here -->
+                        </tbody>
+                    </table>
                     <div id="emptyInvoiceState" class="empty-state" style="display: none;">
                         <i class="fas fa-file-invoice"></i>
                         <h3>No Invoices Yet</h3>
@@ -305,11 +310,11 @@
 
                         <!-- Form Actions -->
                         <div class="invoice-form-actions">
-                            <button onclick="toggleInvoiceView('list')" class="button secondary back-button">
-                                <i class="fas fa-arrow-left"></i> Back to List
-                            </button>
                             <button onclick="saveInvoiceDraft()" class="button secondary">
                                 <i class="fas fa-save"></i> Save Draft
+                            </button>
+                            <button onclick="toggleInvoiceView('list')" class="button secondary">
+                                <i class="fas fa-times"></i> Close
                             </button>
                             <button onclick="showPrintPreview()" class="button primary">
                                 <i class="fas fa-print"></i> Print Preview

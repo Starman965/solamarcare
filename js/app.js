@@ -157,4 +157,81 @@ function showCreateInvoiceForm() {
 function showAddCampaignForm() {
     // Implementation will be added later
     console.log('Add campaign form to be implemented');
+}
+
+// Password visibility toggle
+function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('password');
+    const toggleButton = document.querySelector('.password-toggle');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.classList.add('showing');
+    } else {
+        passwordInput.type = 'password';
+        toggleButton.classList.remove('showing');
+    }
+}
+
+// Calculate scrollbar width
+const getScrollbarWidth = () => {
+    const outer = document.createElement('div');
+    outer.style.visibility = 'hidden';
+    outer.style.overflow = 'scroll';
+    document.body.appendChild(outer);
+
+    const inner = document.createElement('div');
+    outer.appendChild(inner);
+
+    const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
+    outer.parentNode.removeChild(outer);
+
+    return scrollbarWidth;
+};
+
+// Show modal with proper centering
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    // Store scrollbar width as CSS variable
+    document.documentElement.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');
+    
+    // Add class to body to prevent scrolling and compensate for scrollbar
+    document.body.classList.add('modal-open');
+    
+    // Show modal with animation
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+}
+
+// Hide modal and restore scrolling
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    // Remove modal classes
+    modal.classList.remove('show');
+    
+    // Wait for animation to complete before hiding
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        document.documentElement.style.removeProperty('--scrollbar-width');
+    }, 300);
+}
+
+// Update existing modal functions
+function showAddClientModal() {
+    const modal = document.getElementById('clientModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const form = document.getElementById('clientForm');
+    
+    modalTitle.textContent = 'Add New Client';
+    form.reset();
+    showModal('clientModal');
+}
+
+function closeClientModal() {
+    hideModal('clientModal');
 } 
