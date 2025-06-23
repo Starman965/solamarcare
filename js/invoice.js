@@ -623,67 +623,69 @@ async function showPrintPreview() {
                 </style>
             </head>
             <body>
-                <div class="invoice-header">
-                    <div>
-                        <img src="images/solamar_care_logo.png" class="company-logo" alt="Solamar Care">
-                        <div class="company-info">
-                            <h2>Solamar Care</h2>
-                            <p>Attn: Marc Bussio</p>
-                            <p>6513 Easy Street</p>
-                            <p>Carlsbad, CA 92011</p>
+                <div class="invoice-preview">
+                    <div class="invoice-header">
+                        <div>
+                            <img src="images/solamar_care_logo.png" class="company-logo" alt="Solamar Care">
+                            <div class="company-info">
+                                <h2>Solamar Care</h2>
+                                <p>Attn: Marc Bussio</p>
+                                <p>6513 Easy Street</p>
+                                <p>Carlsbad, CA 92011</p>
+                            </div>
+                            <div class="invoice-info">
+                                <p>Invoice #: ${invoiceData.invoiceNumber}</p>
+                                <p>Date: ${new Date().toLocaleDateString()}</p>
+                            </div>
                         </div>
-                        <div class="invoice-info">
-                            <p>Invoice #: ${invoiceData.invoiceNumber}</p>
-                            <p>Date: ${new Date().toLocaleDateString()}</p>
+                        <div>
+                            <div style="height: 200px;"></div><!-- Logo space alignment -->
+                            <div class="bill-to-info">
+                                <h2>Bill To:</h2>
+                                <p>${clientName}</p>
+                                <p>${clientStreetAddress}</p>
+                                <p>${clientCityStateZip}</p>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <div style="height: 200px;"></div><!-- Logo space alignment -->
-                        <div class="bill-to-info">
-                            <h2>Bill To:</h2>
-                            <p>${clientName}</p>
-                            <p>${clientStreetAddress}</p>
-                            <p>${clientCityStateZip}</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Quantity</th>
-                            <th>Description</th>
-                            <th>Unit Price</th>
-                            <th>Line Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${items.map(item => `
+                    
+                    <table>
+                        <thead>
                             <tr>
-                                <td>${item.quantity}</td>
-                                <td>${item.description}</td>
-                                <td>$${item.unitPrice.toFixed(2)}</td>
-                                <td>$${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                <th>Quantity</th>
+                                <th>Description</th>
+                                <th>Unit Price</th>
+                                <th>Line Total</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                
-                <div class="totals">
-                    <div></div>
-                    <div>
-                        <p><strong>Total: $${subtotal.toFixed(2)}</strong></p>
-                        <p>Due: ${getFormattedDueDate()}</p>
+                        </thead>
+                        <tbody>
+                            ${items.map(item => `
+                                <tr>
+                                    <td>${item.quantity}</td>
+                                    <td>${item.description}</td>
+                                    <td>$${item.unitPrice.toFixed(2)}</td>
+                                    <td>$${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div class="totals">
+                        <div></div>
+                        <div>
+                            <p><strong>Total: $${subtotal.toFixed(2)}</strong></p>
+                            <p>Due: ${getFormattedDueDate()}</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="payment-info">
-                    <p>Please make payable to Marc Bussio</p>
-                    <p>Pay by Venmo to @marcbussio</p>
-                </div>
-                
-                <div class="no-print">
-                    <button onclick="window.print()">Print Invoice</button>
+                    <div class="payment-info">
+                        <p>Please make payable to Marc Bussio</p>
+                        <p>Pay by Venmo to @marcbussio</p>
+                    </div>
+                    
+                    <div class="no-print">
+                        <button onclick="window.print()">Print Invoice</button>
+                    </div>
                 </div>
             </body>
             </html>
@@ -967,67 +969,69 @@ async function printInvoice(id) {
                 </style>
             </head>
             <body>
-                <div class="invoice-header">
-                    <div>
-                        <img src="images/solamar_care_logo.png" class="company-logo" alt="Solamar Care">
-                        <div class="company-info">
-                            <h2>Solamar Care</h2>
-                            <p>Attn: Marc Bussio</p>
-                            <p>6513 Easy Street</p>
-                            <p>Carlsbad, CA 92011</p>
+                <div class="invoice-preview">
+                    <div class="invoice-header">
+                        <div>
+                            <img src="images/solamar_care_logo.png" class="company-logo" alt="Solamar Care">
+                            <div class="company-info">
+                                <h2>Solamar Care</h2>
+                                <p>Attn: Marc Bussio</p>
+                                <p>6513 Easy Street</p>
+                                <p>Carlsbad, CA 92011</p>
+                            </div>
+                            <div class="invoice-info">
+                                <p>Invoice #: ${invoice.invoiceNumber}</p>
+                                <p>Date: ${new Date().toLocaleDateString()}</p>
+                            </div>
                         </div>
-                        <div class="invoice-info">
-                            <p>Invoice #: ${invoice.invoiceNumber}</p>
-                            <p>Date: ${new Date().toLocaleDateString()}</p>
+                        <div>
+                            <div style="height: 200px;"></div><!-- Logo space alignment -->
+                            <div class="bill-to-info">
+                                <h2>Bill To:</h2>
+                                <p>${clientData.firstName} ${clientData.lastName}</p>
+                                <p>${clientData.address?.street || ''}</p>
+                                <p>${clientData.address?.city || ''}, ${clientData.address?.state || ''} ${clientData.address?.zip || ''}</p>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <div style="height: 200px;"></div><!-- Logo space alignment -->
-                        <div class="bill-to-info">
-                            <h2>Bill To:</h2>
-                            <p>${clientData.firstName} ${clientData.lastName}</p>
-                            <p>${clientData.address?.street || ''}</p>
-                            <p>${clientData.address?.city || ''}, ${clientData.address?.state || ''} ${clientData.address?.zip || ''}</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Quantity</th>
-                            <th>Description</th>
-                            <th>Unit Price</th>
-                            <th>Line Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${invoice.items.map(item => `
+                    
+                    <table>
+                        <thead>
                             <tr>
-                                <td>${item.quantity}</td>
-                                <td>${item.description}</td>
-                                <td>$${item.unitPrice.toFixed(2)}</td>
-                                <td>$${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                <th>Quantity</th>
+                                <th>Description</th>
+                                <th>Unit Price</th>
+                                <th>Line Total</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                
-                <div class="totals">
-                    <div></div>
-                    <div>
-                        <p><strong>Total: $${invoice.total.toFixed(2)}</strong></p>
-                        <p>Due: ${invoice.dueDate === 'upon_receipt' ? 'Upon Receipt' : new Date(invoice.dueDate).toLocaleDateString()}</p>
+                        </thead>
+                        <tbody>
+                            ${invoice.items.map(item => `
+                                <tr>
+                                    <td>${item.quantity}</td>
+                                    <td>${item.description}</td>
+                                    <td>$${item.unitPrice.toFixed(2)}</td>
+                                    <td>$${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div class="totals">
+                        <div></div>
+                        <div>
+                            <p><strong>Total: $${invoice.total.toFixed(2)}</strong></p>
+                            <p>Due: ${invoice.dueDate === 'upon_receipt' ? 'Upon Receipt' : new Date(invoice.dueDate).toLocaleDateString()}</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="payment-info">
-                    <p>Please make payable to Marc Bussio</p>
-                    <p>Pay by Venmo to @marcbussio</p>
-                </div>
-                
-                <div class="no-print">
-                    <button onclick="window.print()">Print Invoice</button>
+                    <div class="payment-info">
+                        <p>Please make payable to Marc Bussio</p>
+                        <p>Pay by Venmo to @marcbussio</p>
+                    </div>
+                    
+                    <div class="no-print">
+                        <button onclick="window.print()">Print Invoice</button>
+                    </div>
                 </div>
             </body>
             </html>

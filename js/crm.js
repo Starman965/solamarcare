@@ -132,71 +132,73 @@ function showAddClientModal() {
     modalTitle.textContent = 'Add New Client';
     form.reset();
     form.innerHTML = `
-        <div class="form-row">
-            <div class="form-group">
-                <label for="clientFirstName">First Name</label>
-                <input type="text" id="clientFirstName" required>
-            </div>
-            <div class="form-group">
-                <label for="clientLastName">Last Name</label>
-                <input type="text" id="clientLastName" required>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="clientEmail">Email</label>
-                <input type="email" id="clientEmail" required>
-            </div>
-            <div class="form-group">
-                <label for="clientPhone">Phone</label>
-                <input type="tel" id="clientPhone" required>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="clientAddress">Street Address</label>
-            <input type="text" id="clientAddress" required>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="clientCity">City</label>
-                <input type="text" id="clientCity" required>
-            </div>
-            <div class="form-group">
-                <label for="clientState">State</label>
-                <input type="text" id="clientState" required maxlength="2">
-            </div>
-            <div class="form-group">
-                <label for="clientZip">ZIP Code</label>
-                <input type="text" id="clientZip" required maxlength="10">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="clientStartDate">Start Date</label>
-                <input type="date" id="clientStartDate" required>
-            </div>
-            <div class="form-group">
-                <label for="clientEndDate">End Date</label>
-                <input type="date" id="clientEndDate">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group status-group">
-                <label>Status</label>
-                <div class="toggle-switch">
-                    <input type="checkbox" id="clientStatus" checked>
-                    <label for="clientStatus" class="toggle-label">
-                        <span class="toggle-inner"></span>
-                        <span class="toggle-switch"></span>
-                    </label>
-                    <span class="status-text">Active</span>
+        <div class="form-grid">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="clientFirstName">First Name</label>
+                    <input type="text" id="clientFirstName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="clientLastName">Last Name</label>
+                    <input type="text" id="clientLastName" class="form-control" required>
                 </div>
             </div>
-        </div>
-        <div class="form-row">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="clientEmail">Email</label>
+                    <input type="email" id="clientEmail" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="clientPhone">Phone</label>
+                    <input type="tel" id="clientPhone" class="form-control" required>
+                </div>
+            </div>
             <div class="form-group">
-                <label for="clientNotes">Notes</label>
-                <textarea id="clientNotes" rows="3"></textarea>
+                <label for="clientAddress">Street Address</label>
+                <input type="text" id="clientAddress" class="form-control" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="clientCity">City</label>
+                    <input type="text" id="clientCity" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="clientState">State</label>
+                    <input type="text" id="clientState" class="form-control" required maxlength="2">
+                </div>
+                <div class="form-group">
+                    <label for="clientZip">ZIP Code</label>
+                    <input type="text" id="clientZip" class="form-control" required maxlength="10">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="clientStartDate">Start Date</label>
+                    <input type="date" id="clientStartDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="clientEndDate">End Date</label>
+                    <input type="date" id="clientEndDate" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group status-group">
+                    <label>Status</label>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="clientStatus" checked>
+                        <label for="clientStatus" class="toggle-label">
+                            <span class="toggle-inner"></span>
+                            <span class="toggle-switch"></span>
+                        </label>
+                        <span class="status-text">Active</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="clientNotes">Notes</label>
+                    <textarea id="clientNotes" class="form-control" rows="3"></textarea>
+                </div>
             </div>
         </div>
     `;
