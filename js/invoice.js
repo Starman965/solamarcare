@@ -681,6 +681,13 @@ function getFormattedDueDate() {
 // Show print preview
 async function showPrintPreview() {
     try {
+        // If we're editing an existing invoice, use the existing print function
+        if (currentInvoice.id) {
+            await printInvoice(currentInvoice.id);
+            return;
+        }
+
+        // Rest of the existing showPrintPreview code for new invoices
         // Validate client selection
         const clientSelect = document.getElementById('invoiceClient');
         if (!clientSelect.value) {
