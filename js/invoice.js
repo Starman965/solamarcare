@@ -168,8 +168,10 @@ function createInvoiceRow(id, invoice) {
             <span class="invoice-number">${invoiceNumber}</span>
         </td>
         <td>
-            ${invoice.clientName || 'Unknown Client'}
-            <div class="client-address">${invoice.clientAddress?.street || 'No address'}</div>
+            <div class="client-info">
+                <span class="client-name">${invoice.clientName || 'Unknown Client'}</span>
+                <span class="client-address">${invoice.clientAddress?.street || 'No address'}</span>
+            </div>
         </td>
         <td class="amount">$${total.toFixed(2)}</td>
         <td><span class="status-badge ${statusClass}">${status.toUpperCase()}</span></td>
@@ -213,10 +215,34 @@ async function loadClientName(clientId) {
 }
 
 // Initialize invoice number format: INV-YYYY-XXXX
-function generateInvoiceNumber() {
-    const year = new Date().getFullYear();
-    const random = Math.floor(1000 + Math.random() * 9000); // 4-digit number
-    return `INV-${year}-${random}`;
+async function generateInvoiceNumber() {
+    try {
+        // Get all invoices ordered by invoice number in descending order
+        const snapshot = await db.collection('invoices')
+            .orderBy('invoiceNumber', 'desc')
+            .limit(1)
+            .get();
+
+        const year = 2025; // Hardcoded to 2025 as requested
+        let nextNumber = 1017; // Starting number if no invoices exist
+
+        if (!snapshot.empty) {
+            // Get the latest invoice number
+            const latestInvoice = snapshot.docs[0].data();
+            const latestNumber = latestInvoice.invoiceNumber;
+            
+            // Extract the numeric part and increment
+            const match = latestNumber.match(/INV-\d{4}-(\d+)/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+
+        return `INV-${year}-${nextNumber}`;
+    } catch (error) {
+        console.error('Error generating invoice number:', error);
+        throw error;
+    }
 }
 
 // Load clients into dropdown
@@ -682,18 +708,20 @@ async function showPrintPreview() {
         };
 
         // If it's a new invoice, add createdAt and generate invoice number
-        // If it's an existing invoice, keep original number and creation date
         if (!currentInvoice.id) {
             invoiceData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             invoiceData.invoiceNumber = await generateInvoiceNumber();
             // Create new invoice
-            await db.collection('invoices').add(invoiceData);
+            const docRef = await db.collection('invoices').add(invoiceData);
+            console.log('saveInvoiceDraft: Successfully created new invoice with ID:', docRef.id);
         } else {
             // Update existing invoice
             invoiceData.invoiceNumber = currentInvoice.invoiceNumber;
             invoiceData.createdAt = currentInvoice.createdAt;
             // Update the document
+            console.log('saveInvoiceDraft: Attempting to update invoice in Firebase');
             await db.collection('invoices').doc(currentInvoice.id).update(invoiceData);
+            console.log('saveInvoiceDraft: Successfully updated invoice');
         }
 
         // Create printable invoice
