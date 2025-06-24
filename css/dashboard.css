@@ -1,8 +1,36 @@
 /* Dashboard Layout */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+.dashboard-nav {
+    width: 250px;
+    background: #2c3e50;
+    color: white;
+    padding: 20px 0;
+    flex-shrink: 0;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+}
+
 .dashboard-main {
-    padding: 2rem;
-    background-color: #f8f9fa;
-    min-height: calc(100vh - 60px);
+    flex: 1;
+    padding: 20px;
+    margin-left: 250px;
+    overflow-y: auto;
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+    width: 100%;
 }
 
 /* KPI Section */
@@ -95,14 +123,6 @@
 
 .kpi-card.info .kpi-icon i {
     color: #4285f4;
-}
-
-/* Dashboard Grid Layout */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
 }
 
 /* Section Styling */
@@ -229,16 +249,23 @@
 }
 
 /* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 768px) {
+    .dashboard-nav {
+        width: 200px;
+    }
+    
     .dashboard-main {
-        padding: 1rem;
+        margin-left: 200px;
+        padding: 15px;
     }
 
     .kpi-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-grid {
         grid-template-columns: 1fr;
     }
 
@@ -257,6 +284,34 @@
 
     .kpi-value {
         font-size: 1.25rem;
+    }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+    .dashboard-nav {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+    
+    .dashboard-main {
+        margin-left: 0;
+    }
+    
+    .dashboard-container {
+        flex-direction: column;
+    }
+}
+
+/* Ensure proper scrolling on iOS devices */
+@supports (-webkit-touch-callout: none) {
+    .dashboard-main {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .dashboard-nav {
+        -webkit-overflow-scrolling: touch;
     }
 }
 
