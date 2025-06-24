@@ -128,11 +128,12 @@ async function loadRevenueMetrics() {
         const invoicesSnapshot = await db.collection('invoices').get();
         console.log(`Found ${invoicesSnapshot.size} total invoices`);
 
-        let totalRevenue = 0;
-        let revenueCollected = 0;
-        let revenueDue = 0;
-        let revenuePastDue = 0;
-        let revenueDraft = 0;
+        let totalRevenueEarned = 0;    // All statuses combined
+        let totalRevenueCollected = 0; // Only Paid
+        let totalRevenueBilled = 0;    // Due + Past Due
+        let revenueDue = 0;            // Only Due
+        let revenuePastDue = 0;        // Only Past Due
+        let revenueDraft = 0;          // Only Draft
         const recentInvoices = [];
 
         // Process each invoice
@@ -148,22 +149,20 @@ async function loadRevenueMetrics() {
                 clientName: invoiceData.clientName
             });
 
+            // Add to total revenue earned (all statuses)
+            totalRevenueEarned += amount;
+
             switch (invoiceData.status?.toLowerCase()) {
                 case 'paid':
-                    revenueCollected += amount;
-                    totalRevenue += amount;
-                    console.log('Added to collected revenue:', {
-                        amount,
-                        newTotal: revenueCollected
-                    });
+                    totalRevenueCollected += amount;
                     break;
                 case 'due':
                     revenueDue += amount;
-                    totalRevenue += amount;
+                    totalRevenueBilled += amount;
                     break;
                 case 'past due':
                     revenuePastDue += amount;
-                    totalRevenue += amount;
+                    totalRevenueBilled += amount;
                     break;
                 case 'draft':
                     revenueDraft += amount;
@@ -179,8 +178,9 @@ async function loadRevenueMetrics() {
         }
 
         console.log('Final revenue calculations:', {
-            totalRevenue,
-            revenueCollected,
+            totalRevenueEarned,
+            totalRevenueCollected,
+            totalRevenueBilled,
             revenueDue,
             revenuePastDue,
             revenueDraft
@@ -188,8 +188,9 @@ async function loadRevenueMetrics() {
 
         // Update dashboard data
         Object.assign(dashboardData, {
-            totalRevenue,
-            revenueCollected,
+            totalRevenue: totalRevenueEarned,
+            revenueCollected: totalRevenueCollected,
+            revenueBilled: totalRevenueBilled,
             revenueDue,
             revenuePastDue,
             revenueDraft
@@ -205,8 +206,9 @@ async function loadRevenueMetrics() {
             .slice(0, 5);
 
         console.log('Revenue metrics loaded:', {
-            totalRevenue,
-            revenueCollected,
+            totalRevenueEarned,
+            totalRevenueCollected,
+            totalRevenueBilled,
             revenueDue,
             revenuePastDue,
             revenueDraft,
@@ -279,33 +281,42 @@ function updateDebugStatus(status) {
 
 // Update Dashboard UI
 function updateDashboardUI() {
-    console.log('Updating dashboard UI with data:', dashboardData);
-    
     try {
-        // Update KPI Cards with proper number formatting
-        updateElement('activeClientsCount', dashboardData.activeClients);
-        updateElement('totalRevenueAmount', formatCurrency(dashboardData.totalRevenue));
-        updateElement('revenueCollectedAmount', formatCurrency(dashboardData.revenueCollected));
-        updateElement('revenueDueAmount', formatCurrency(dashboardData.revenueDue));
-        updateElement('revenuePastDueAmount', formatCurrency(dashboardData.revenuePastDue));
-        updateElement('revenueDraftAmount', formatCurrency(dashboardData.revenueDraft));
+        console.log('Updating dashboard UI with data:', dashboardData);
+        
+        // Update metrics one by one with error checking
+        const updates = [
+            { id: 'activeClientsCount', value: dashboardData.activeClients },
+            { id: 'totalRevenueAmount', value: formatCurrency(dashboardData.totalRevenue) },
+            { id: 'revenueCollectedAmount', value: formatCurrency(dashboardData.revenueCollected) },
+            { id: 'revenueBilledAmount', value: formatCurrency(dashboardData.revenueBilled) },
+            { id: 'revenueDueAmount', value: formatCurrency(dashboardData.revenueDue) },
+            { id: 'revenuePastDueAmount', value: formatCurrency(dashboardData.revenuePastDue) },
+            { id: 'revenueDraftAmount', value: formatCurrency(dashboardData.revenueDraft) }
+        ];
 
-        // Update Recent Clients List
-        updateRecentClientsList();
-
-        // Update Recent Invoices List
-        updateRecentInvoicesList();
-
-        // Update Upcoming Visits List
-        updateUpcomingVisitsList();
+        // Update each metric with error handling
+        updates.forEach(({ id, value }) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            } else {
+                console.warn(`Element with id '${id}' not found in the document`);
+            }
+        });
         
         // Update revenue goal progress
         updateRevenueGoalProgress(dashboardData.totalRevenue);
         
+        // Update activity lists
+        updateRecentClientsList();
+        updateRecentInvoicesList();
+        updateUpcomingVisitsList();
+        
         console.log('Dashboard UI updated successfully');
     } catch (error) {
         console.error('Error updating dashboard UI:', error);
-        showErrorMessage('Error updating dashboard display');
+        showErrorMessage('Failed to update dashboard: ' + error.message);
     }
 }
 

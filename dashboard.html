@@ -58,110 +58,149 @@
                 <div class="section-header">
                     <h2>Key Metrics</h2>
                 </div>
-                <!-- Revenue Goal Progress -->
-                <div class="kpi-card goal-card">
-                    <div class="kpi-icon">
-                        <i class="fas fa-bullseye"></i>
-                    </div>
-                    <div class="kpi-content">
-                        <h3>Revenue Goal Progress</h3>
-                        <div class="goal-progress">
-                            <div class="progress-bar-container">
-                                <div id="revenueGoalBar" class="progress-bar"></div>
+
+                <!-- Client Metrics Section -->
+                <div class="metric-section">
+                    <h3 class="metric-section-header">Client Overview</h3>
+                    <div class="kpi-grid">
+                        <!-- Active Clients KPI -->
+                        <div class="kpi-card info">
+                            <div class="kpi-icon">
+                                <i class="fas fa-users"></i>
                             </div>
-                            <div class="goal-stats">
-                                <span id="revenueGoalPercentage">0%</span>
-                                <span id="revenueGoalAmount">$0 / $1,000</span>
+                            <div class="kpi-content">
+                                <h3>Active Clients</h3>
+                                <div class="kpi-value" id="activeClientsCount">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="kpi-grid">
-                    <!-- Active Clients KPI -->
-                    <div class="kpi-card">
-                        <div class="kpi-icon">
-                            <i class="fas fa-users"></i>
+
+                <!-- Overall Revenue Section -->
+                <div class="metric-section">
+                    <h3 class="metric-section-header">Overall Revenue</h3>
+                    <div class="kpi-grid">
+                        <!-- Total Revenue Earned KPI -->
+                        <div class="kpi-card primary">
+                            <div class="kpi-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h3>Total Revenue Earned</h3>
+                                <div class="kpi-value" id="totalRevenueAmount">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="kpi-content">
-                            <h3>Active Clients</h3>
-                            <div class="kpi-value" id="activeClientsCount">
-                                <div class="loading-state">
-                                    <i class="fas fa-spinner"></i>
+
+                        <!-- Revenue Goal Progress -->
+                        <div class="kpi-card goal-card">
+                            <div class="kpi-icon">
+                                <i class="fas fa-bullseye"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h3>Progress to Goal</h3>
+                                <div class="goal-progress">
+                                    <div class="progress-bar-container">
+                                        <div id="revenueGoalBar" class="progress-bar"></div>
+                                    </div>
+                                    <div class="goal-stats">
+                                        <span id="revenueGoalPercentage">0%</span>
+                                        <span id="revenueGoalAmount">$0 / $1,000</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Total Revenue KPI -->
-                    <div class="kpi-card">
-                        <div class="kpi-icon">
-                            <i class="fas fa-chart-line"></i>
+                <!-- Current Revenue Status Section -->
+                <div class="metric-section">
+                    <h3 class="metric-section-header">Current Revenue Status</h3>
+                    <div class="kpi-grid">
+                        <!-- Total Revenue Collected KPI -->
+                        <div class="kpi-card success">
+                            <div class="kpi-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h3>Total Revenue Collected</h3>
+                                <div class="kpi-value" id="revenueCollectedAmount">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="kpi-content">
-                            <h3>Total Revenue Earned</h3>
-                            <div class="kpi-value" id="totalRevenueAmount">
-                                <div class="loading-state">
-                                    <i class="fas fa-spinner"></i>
+
+                        <!-- Total Revenue Outstanding KPI -->
+                        <div class="kpi-card warning">
+                            <div class="kpi-icon">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h3>Total Revenue Outstanding</h3>
+                                <div class="kpi-value" id="revenueBilledAmount">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Revenue Collected KPI -->
-                    <div class="kpi-card success">
-                        <div class="kpi-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Total Revenue</h3>
-                            <div class="kpi-value" id="revenueCollectedAmount">
-                                <div class="loading-state">
-                                    <i class="fas fa-spinner"></i>
+                <!-- Revenue Details Section -->
+                <div class="metric-section">
+                    <h3 class="metric-section-header">Revenue Details</h3>
+                    <div class="kpi-grid">
+                        <!-- Revenue Due KPI -->
+                        <div class="kpi-card warning">
+                            <div class="kpi-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h3>Revenue Due</h3>
+                                <div class="kpi-value" id="revenueDueAmount">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Revenue Due KPI -->
-                    <div class="kpi-card warning">
-                        <div class="kpi-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Revenue Due</h3>
-                            <div class="kpi-value" id="revenueDueAmount">
-                                <div class="loading-state">
-                                    <i class="fas fa-spinner"></i>
+                        <!-- Revenue Past Due KPI -->
+                        <div class="kpi-card danger">
+                            <div class="kpi-icon">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="kpi-content">
+                                <h3>Revenue Past Due</h3>
+                                <div class="kpi-value" id="revenuePastDueAmount">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Revenue Past Due KPI -->
-                    <div class="kpi-card danger">
-                        <div class="kpi-icon">
-                            <i class="fas fa-exclamation-circle"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Revenue Past Due</h3>
-                            <div class="kpi-value" id="revenuePastDueAmount">
-                                <div class="loading-state">
-                                    <i class="fas fa-spinner"></i>
-                                </div>
+                        <!-- Revenue To Be Billed KPI -->
+                        <div class="kpi-card info">
+                            <div class="kpi-icon">
+                                <i class="fas fa-file-alt"></i>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Revenue Draft KPI -->
-                    <div class="kpi-card info">
-                        <div class="kpi-icon">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Revenue Pending (Draft)</h3>
-                            <div class="kpi-value" id="revenueDraftAmount">
-                                <div class="loading-state">
-                                    <i class="fas fa-spinner"></i>
+                            <div class="kpi-content">
+                                <h3>Revenue To Be Billed</h3>
+                                <div class="kpi-value" id="revenueDraftAmount">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
