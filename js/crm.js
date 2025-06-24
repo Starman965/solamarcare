@@ -117,87 +117,26 @@ function showAddClientModal() {
     const modal = document.getElementById('clientModal');
     const modalTitle = document.getElementById('modalTitle');
     const form = document.getElementById('clientForm');
+    const deleteContainer = document.getElementById('deleteButtonContainer');
     
     modalTitle.textContent = 'Add New Client';
     form.reset();
-    form.innerHTML = `
-        <div class="form-grid">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="clientFirstName">First Name</label>
-                    <input type="text" id="clientFirstName" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="clientLastName">Last Name</label>
-                    <input type="text" id="clientLastName" class="form-control" required>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="clientEmail">Email</label>
-                    <input type="email" id="clientEmail" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="clientPhone">Phone</label>
-                    <input type="tel" id="clientPhone" class="form-control" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="clientAddress">Street Address</label>
-                <input type="text" id="clientAddress" class="form-control" required>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="clientCity">City</label>
-                    <input type="text" id="clientCity" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="clientState">State</label>
-                    <input type="text" id="clientState" class="form-control" required maxlength="2">
-                </div>
-                <div class="form-group">
-                    <label for="clientZip">ZIP Code</label>
-                    <input type="text" id="clientZip" class="form-control" required maxlength="10">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="clientStartDate">Start Date</label>
-                    <input type="date" id="clientStartDate" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="clientEndDate">End Date</label>
-                    <input type="date" id="clientEndDate" class="form-control">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group status-group">
-                    <label>Status</label>
-                    <div class="toggle-switch">
-                        <input type="checkbox" id="clientStatus" checked>
-                        <label for="clientStatus" class="toggle-label">
-                            <span class="toggle-inner"></span>
-                            <span class="toggle-switch"></span>
-                        </label>
-                        <span class="status-text">Active</span>
-                    </div>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="clientNotes">Notes</label>
-                    <textarea id="clientNotes" class="form-control" rows="3"></textarea>
-                </div>
-            </div>
-        </div>
-    `;
-
+    
+    // Clear any existing client ID
+    form.dataset.clientId = '';
+    
+    // Hide delete button for new clients
+    if (deleteContainer) {
+        deleteContainer.style.display = 'none';
+    }
+    
     // Pre-populate Carlsbad address fields
     document.getElementById('clientCity').value = 'Carlsbad';
     document.getElementById('clientState').value = 'CA';
     document.getElementById('clientZip').value = '92011';
     
-    modal.style.display = 'block';
+    // Use the proper modal show function
+    showModal('clientModal');
 }
 
 // View Client Details Function
@@ -297,11 +236,7 @@ function editFromView() {
 
 // Update the closeClientModal function to also reset the form
 function closeClientModal() {
-    const modal = document.getElementById('clientModal');
     const form = document.getElementById('clientForm');
-    if (modal) {
-        modal.style.display = 'none';
-    }
     if (form) {
         form.reset();
         // Remove any existing Client ID display
@@ -312,6 +247,8 @@ function closeClientModal() {
         // Reset the form's client ID
         form.dataset.clientId = '';
     }
+    // Use the proper modal hide function
+    hideModal('clientModal');
 }
 
 // Generate Client ID
@@ -382,8 +319,16 @@ async function saveClient() {
         };
 
         if (clientId) {
+            // Check if the document still exists before updating
+            const docRef = db.collection('clients').doc(clientId);
+            const doc = await docRef.get();
+            
+            if (!doc.exists) {
+                throw new Error('Client no longer exists. They may have been deleted.');
+            }
+            
             // Update existing client - don't modify the accountId
-            await db.collection('clients').doc(clientId).update(clientData);
+            await docRef.update(clientData);
         } else {
             // Add new client - generate new unique accountId
             clientData.accountId = await generateUniqueClientId();
@@ -391,11 +336,16 @@ async function saveClient() {
             await db.collection('clients').add(clientData);
         }
 
-        closeClientModal();
+        hideModal('clientModal'); // Use hideModal instead of closeClientModal
         loadClients(); // Refresh the client list
     } catch (error) {
         console.error('Error saving client:', error);
         alert('Error saving client: ' + error.message);
+        
+        // If the client was deleted, close the modal
+        if (error.message.includes('no longer exists')) {
+            hideModal('clientModal');
+        }
     }
 }
 
@@ -501,7 +451,13 @@ async function deleteClient(clientId) {
 
     try {
         await db.collection('clients').doc(clientId).delete();
-        closeClientModal();
+        // Clear the form's client ID before closing
+        const form = document.getElementById('clientForm');
+        if (form) {
+            form.dataset.clientId = '';
+            form.reset();
+        }
+        hideModal('clientModal'); // Use hideModal instead of closeClientModal
         loadClients(); // Refresh the client list
     } catch (error) {
         console.error('Error deleting client:', error);
@@ -522,6 +478,7 @@ async function editClient(clientId) {
         const modal = document.getElementById('clientModal');
         const modalTitle = document.getElementById('modalTitle');
         const form = document.getElementById('clientForm');
+        const deleteContainer = document.getElementById('deleteButtonContainer');
 
         if (!modal || !modalTitle || !form) {
             console.error('Required modal elements not found');
@@ -530,6 +487,11 @@ async function editClient(clientId) {
 
         modalTitle.textContent = 'Edit Client';
         form.dataset.clientId = clientId;
+
+        // Show delete button for existing clients
+        if (deleteContainer) {
+            deleteContainer.style.display = 'block';
+        }
 
         // Add Client ID display at the top of the form
         const existingClientId = form.querySelector('.account-id');
@@ -559,20 +521,6 @@ async function editClient(clientId) {
         }
         document.getElementById('clientStatus').checked = client.isActive;
         document.getElementById('clientNotes').value = client.notes || '';
-
-        // Update modal footer
-        const modalFooter = modal.querySelector('.modal-footer');
-        if (modalFooter) {
-            modalFooter.innerHTML = `
-                <button onclick="deleteClient('${clientId}')" class="button danger">
-                    <i class="fas fa-trash"></i> Delete Client
-                </button>
-                <div class="footer-right">
-                    <button onclick="closeClientModal()" class="button secondary">Cancel</button>
-                    <button onclick="saveClient()" class="button primary">Save Changes</button>
-                </div>
-            `;
-        }
 
         updateStatusText(client.isActive);
     } catch (error) {

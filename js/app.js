@@ -2,162 +2,75 @@
 async function handleLogin() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const errorElement = document.getElementById('authError');
+    const authError = document.getElementById('authError');
 
     try {
         await auth.signInWithEmailAndPassword(email, password);
-        // Login successful - UI will update through the auth state observer
+        // Auth observer will handle redirect
     } catch (error) {
-        errorElement.textContent = error.message;
+        console.error('Login error:', error);
+        authError.textContent = getAuthErrorMessage(error);
+        authError.style.display = 'block';
     }
 }
 
-async function handleLogout() {
-    try {
-        await auth.signOut();
-        // Logout successful - UI will update through the auth state observer
-    } catch (error) {
-        console.error('Error signing out:', error);
-    }
+function handleLogout() {
+    auth.signOut().then(() => {
+        window.location.href = 'login.html';
+    }).catch(error => {
+        console.error('Logout error:', error);
+    });
 }
 
-// Auth State Observer
-auth.onAuthStateChanged((user) => {
-    const loginSection = document.getElementById('loginSection');
-    const dashboardSection = document.getElementById('dashboardSection');
-
-    if (user) {
-        // User is signed in
-        console.log('User is signed in:', user.email);
-        loginSection.style.display = 'none';
-        dashboardSection.style.display = 'grid';
-        loadDashboardData(); // Only load data after user is confirmed logged in
-        setupClientSearch(); // Setup search after we know user is authenticated
-    } else {
-        // User is signed out
-        console.log('User is signed out');
-        loginSection.style.display = 'flex';
-        dashboardSection.style.display = 'none';
-        // Clear any existing data
-        const clientsList = document.getElementById('clientsList');
-        if (clientsList) clientsList.innerHTML = '';
+// Auth state observer
+auth.onAuthStateChanged(user => {
+    const currentPath = window.location.pathname;
+    const publicPages = ['/login.html', '/register.html'];
+    const isPublicPage = publicPages.some(page => currentPath.endsWith(page));
+    
+    if (!user && !isPublicPage) {
+        // Not logged in and trying to access protected page - redirect to login
+        window.location.href = 'login.html';
+    } else if (user && isPublicPage) {
+        // Logged in but on a public page - redirect to dashboard
+        window.location.href = 'dashboard.html';
+    } else if (user) {
+        // User is logged in and on a protected page - ensure Firebase is initialized
+        if (typeof db === 'undefined') {
+            console.error('Firestore not initialized');
+            handleLogout();
+            return;
+        }
+        
+        // Initialize any page-specific functionality
+        const pageName = currentPath.split('/').pop();
+        console.log('Initializing page:', pageName);
+        
+        switch (pageName) {
+            case 'dashboard.html':
+                if (typeof initializeDashboard === 'function' && !window.dashboardInitialized) {
+                    console.log('Initializing dashboard from app.js...');
+                    window.dashboardInitialized = true;
+                    initializeDashboard();
+                } else {
+                    console.log('Dashboard already initialized or initialization function not found');
+                }
+                break;
+            case 'clients.html':
+                if (typeof loadClients === 'function') loadClients();
+                break;
+            case 'visits.html':
+                if (typeof loadVisits === 'function') loadVisits();
+                break;
+            case 'invoices.html':
+                if (typeof loadInvoices === 'function') loadInvoices();
+                break;
+            case 'marketing.html':
+                if (typeof loadMarketingCampaigns === 'function') loadMarketingCampaigns();
+                break;
+        }
     }
 });
-
-// Dashboard Navigation
-function showSection(sectionName) {
-    const sections = ['clients', 'visits', 'invoices', 'marketing'];
-    sections.forEach(section => {
-        const element = document.getElementById(`${section}Section`);
-        if (element) {
-            element.style.display = section === sectionName ? 'block' : 'none';
-        }
-    });
-
-    // Initialize sections as needed
-    if (sectionName === 'invoices') {
-        loadInvoices();
-    }
-}
-
-// Data Loading Functions
-async function loadDashboardData() {
-    try {
-        await loadClients();
-        await loadVisits();
-        // Invoices are loaded when showing the section
-        await loadMarketingCampaigns();
-    } catch (error) {
-        console.error('Error loading dashboard data:', error);
-    }
-}
-
-async function loadVisits() {
-    const visitsList = document.getElementById('visitsList');
-    try {
-        const snapshot = await db.collection('clients').get();
-        visitsList.innerHTML = '';
-        
-        for (const clientDoc of snapshot.docs) {
-            const visitsSnapshot = await clientDoc.ref.collection('serviceVisits').get();
-            visitsSnapshot.forEach(doc => {
-                const visit = doc.data();
-                const visitCard = createVisitCard(doc.id, visit, clientDoc.data().name);
-                visitsList.appendChild(visitCard);
-            });
-        }
-    } catch (error) {
-        console.error('Error loading visits:', error);
-    }
-}
-
-// loadInvoices function is now handled in invoice.js
-
-async function loadMarketingCampaigns() {
-    const campaignsList = document.getElementById('campaignsList');
-    try {
-        const snapshot = await db.collection('marketingCampaigns').get();
-        campaignsList.innerHTML = '';
-        
-        snapshot.forEach(doc => {
-            const campaign = doc.data();
-            const campaignCard = createCampaignCard(doc.id, campaign);
-            campaignsList.appendChild(campaignCard);
-        });
-    } catch (error) {
-        console.error('Error loading campaigns:', error);
-    }
-}
-
-function createVisitCard(id, visit, clientName) {
-    const card = document.createElement('div');
-    card.className = 'data-card';
-    card.innerHTML = `
-        <h3>${clientName}</h3>
-        <p>Date: ${new Date(visit.date.toDate()).toLocaleDateString()}</p>
-        <p>Status: ${visit.status}</p>
-        <div class="card-actions">
-            <button onclick="editVisit('${id}')" class="card-button">
-                <i class="fas fa-edit"></i> Edit
-            </button>
-        </div>
-    `;
-    return card;
-}
-
-// Invoice card creation is now handled in invoice.js
-
-function createCampaignCard(id, campaign) {
-    const card = document.createElement('div');
-    card.className = 'data-card';
-    card.innerHTML = `
-        <h3>${campaign.name}</h3>
-        <p>Status: ${campaign.status}</p>
-        <p>Created: ${new Date(campaign.createdAt.toDate()).toLocaleDateString()}</p>
-        <div class="card-actions">
-            <button onclick="editCampaign('${id}')" class="card-button">
-                <i class="fas fa-edit"></i> Edit
-            </button>
-        </div>
-    `;
-    return card;
-}
-
-// Form Display Functions
-function showAddVisitForm() {
-    // Implementation will be added later
-    console.log('Add visit form to be implemented');
-}
-
-function showCreateInvoiceForm() {
-    // Implementation will be added later
-    console.log('Create invoice form to be implemented');
-}
-
-function showAddCampaignForm() {
-    // Implementation will be added later
-    console.log('Add campaign form to be implemented');
-}
 
 // Password visibility toggle
 function togglePasswordVisibility() {
@@ -221,17 +134,18 @@ function hideModal(modalId) {
     }, 300);
 }
 
-// Update existing modal functions
-function showAddClientModal() {
-    const modal = document.getElementById('clientModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const form = document.getElementById('clientForm');
-    
-    modalTitle.textContent = 'Add New Client';
-    form.reset();
-    showModal('clientModal');
-}
-
-function closeClientModal() {
-    hideModal('clientModal');
+// Helper function to get auth error messages
+function getAuthErrorMessage(error) {
+    switch (error.code) {
+        case 'auth/invalid-email':
+            return 'Invalid email address';
+        case 'auth/user-disabled':
+            return 'This account has been disabled';
+        case 'auth/user-not-found':
+            return 'No account found with this email';
+        case 'auth/wrong-password':
+            return 'Incorrect password';
+        default:
+            return 'An error occurred during login';
+    }
 } 

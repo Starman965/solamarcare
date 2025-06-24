@@ -15,6 +15,9 @@ let currentInvoice = {
 let hasUnsavedChanges = false;
 let isInvoiceFormOpen = false;
 
+// Add current filter state at the top of the file with other state variables
+let currentFilter = 'all';
+
 // Track changes in the form
 function trackInvoiceChanges() {
     hasUnsavedChanges = true;
@@ -37,12 +40,6 @@ function checkUnsavedChanges() {
 function toggleInvoiceView(view, skipChangeCheck = false) {
     const listView = document.getElementById('invoiceListView');
     const createView = document.getElementById('invoiceCreateView');
-    const dashboardSection = document.getElementById('dashboardSection');
-    
-    // Ensure we're in the dashboard context
-    if (!dashboardSection || dashboardSection.style.display === 'none') {
-        return; // Don't toggle if we're not in the dashboard
-    }
     
     if (view === 'create') {
         listView.style.display = 'none';
@@ -102,13 +99,28 @@ function initializeCreateView() {
     resetInvoiceChanges();
 }
 
+// Filter invoices
+function filterInvoices(filter) {
+    // Update active button state
+    const buttons = document.querySelectorAll('.filter-button');
+    buttons.forEach(button => {
+        button.classList.toggle('active', button.dataset.filter === filter);
+    });
+    
+    // Update current filter and reload invoices
+    currentFilter = filter;
+    loadInvoices();
+}
+
 // Load and display invoices
 async function loadInvoices() {
     const tableBody = document.getElementById('invoiceTableBody');
     const emptyState = document.getElementById('emptyInvoiceState');
     const errorState = document.getElementById('errorInvoiceState');
+    const emptyStateTitle = document.getElementById('emptyStateTitle');
+    const emptyStateMessage = document.getElementById('emptyStateMessage');
     
-    if (!tableBody || !emptyState || !errorState) {
+    if (!tableBody || !emptyState || !errorState || !emptyStateTitle || !emptyStateMessage) {
         console.error('Required invoice elements not found');
         return;
     }
@@ -119,14 +131,38 @@ async function loadInvoices() {
         emptyState.style.display = 'none';
         errorState.style.display = 'none';
 
-        // Get all invoices from the top-level invoices collection
-        const invoicesSnapshot = await db.collection('invoices')
-            .orderBy('createdAt', 'desc')
-            .get();
+        // First check if there are any invoices at all
+        const totalCount = await db.collection('invoices').get();
+        const hasAnyInvoices = !totalCount.empty;
+
+        // Create base query
+        let query = db.collection('invoices');
+        
+        // Apply filter if not 'all'
+        if (currentFilter !== 'all') {
+            query = query.where('status', '==', currentFilter);
+        }
+        
+        // Add sorting
+        query = query.orderBy('createdAt', 'desc');
+
+        // Execute query
+        const invoicesSnapshot = await query.get();
 
         // Show empty state if no invoices
         if (invoicesSnapshot.empty) {
             emptyState.style.display = 'block';
+            
+            if (!hasAnyInvoices) {
+                // Case 1: No invoices exist at all
+                emptyStateTitle.textContent = 'No Invoices Yet';
+                emptyStateMessage.textContent = 'Create your first invoice by clicking the "Create Invoice" button above.';
+            } else {
+                // Case 2: No invoices match the current filter
+                const filterText = currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1);
+                emptyStateTitle.textContent = `No ${filterText} Invoices`;
+                emptyStateMessage.textContent = `There are no invoices with ${filterText} status.`;
+            }
             return;
         }
 
@@ -724,13 +760,60 @@ async function showPrintPreview() {
             console.log('saveInvoiceDraft: Successfully updated invoice');
         }
 
-        // Create printable invoice
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
+        // Create modal for print preview
+        const modalContainer = document.createElement('div');
+        modalContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        `;
+
+        const closeButton = document.createElement('button');
+        closeButton.innerHTML = '×';
+        closeButton.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: none;
+            background: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        `;
+        closeButton.onclick = () => document.body.removeChild(modalContainer);
+
+        // Create the print content
+        const printContent = `
             <!DOCTYPE html>
             <html>
             <head>
                 <title>Invoice ${invoiceData.invoiceNumber}</title>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
                 <style>
                     body {
                         font-family: Arial, sans-serif;
@@ -800,6 +883,18 @@ async function showPrintPreview() {
                         body { margin: 0; }
                         .no-print { display: none; }
                     }
+                    @media (max-width: 768px) {
+                        .invoice-header {
+                            flex-direction: column;
+                            gap: 20px;
+                        }
+                        table {
+                            font-size: 14px;
+                        }
+                        th, td {
+                            padding: 8px;
+                        }
+                    }
                 </style>
             </head>
             <body>
@@ -862,15 +957,60 @@ async function showPrintPreview() {
                         <p>Please make payable to Marc Bussio</p>
                         <p>Pay by Venmo to @marcbussio</p>
                     </div>
-                    
-                    <div class="no-print">
-                        <button onclick="window.print()">Print Invoice</button>
-                    </div>
                 </div>
             </body>
             </html>
-        `);
-        
+        `;
+
+        // Create iframe for print preview
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = `
+            width: 100%;
+            height: calc(90vh - 100px);
+            border: none;
+            margin-bottom: 20px;
+        `;
+
+        // Create print button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = `
+            text-align: center;
+            margin-top: 20px;
+        `;
+
+        // Create print button
+        const printButton = document.createElement('button');
+        printButton.innerHTML = '<i class="fas fa-print"></i> Print Invoice';
+        printButton.style.cssText = `
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        `;
+        printButton.onclick = () => {
+            iframe.contentWindow.print();
+        };
+
+        // Assemble the modal
+        buttonContainer.appendChild(printButton);
+        modalContent.appendChild(closeButton);
+        modalContent.appendChild(iframe);
+        modalContent.appendChild(buttonContainer);
+        modalContainer.appendChild(modalContent);
+        document.body.appendChild(modalContainer);
+
+        // Write content to iframe after it's added to DOM
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(printContent);
+        iframe.contentDocument.close();
+
         // Return to list view and refresh
         toggleInvoiceView('list');
         

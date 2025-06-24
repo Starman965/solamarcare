@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solamar Care - Clients</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Solamar Care - Clients">
+    <meta name="description" content="Internal client management system for Solamar Care services">
+    
+    <!-- iOS/Apple specific -->
+    <link rel="apple-touch-icon" href="images/solamar_marc.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/solamar_marc.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="dashboard-nav">
+            <div class="nav-logo">
+                <img src="images/solamar_care_logo_white.png" alt="Solamar Care Logo">
+                <span>Solamar Care Management</span>
+            </div>
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-button"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="clients.html" class="nav-button active"><i class="fas fa-users"></i> Clients</a>
+                <a href="visits.html" class="nav-button"><i class="fas fa-calendar-check"></i> Visits</a>
+                <a href="invoices.html" class="nav-button"><i class="fas fa-file-invoice-dollar"></i> Invoices</a>
+                <a href="marketing.html" class="nav-button"><i class="fas fa-bullhorn"></i> Marketing</a>
+                <button onclick="handleLogout()" class="nav-button logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </nav>
+
+        <main class="dashboard-main">
+            <div class="section-header">
+                <h2>Clients</h2>
+                <div class="header-actions">
+                    <div class="search-box">
+                        <input type="text" id="clientSearch" placeholder="Search clients...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <button onclick="showAddClientModal()" class="action-button">
+                        <i class="fas fa-plus"></i> Add New Client
+                    </button>
+                </div>
+            </div>
+            <div id="clientsList" class="data-list"></div>
+
+            <!-- Client Modal -->
+            <div id="clientModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modalTitle">Add New Client</h3>
+                        <button onclick="closeClientModal()" class="close-button" title="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="clientForm" class="form-grid" onsubmit="event.preventDefault(); saveClient();">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientFirstName">First Name</label>
+                                    <input type="text" id="clientFirstName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientLastName">Last Name</label>
+                                    <input type="text" id="clientLastName" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientEmail">Email</label>
+                                    <input type="email" id="clientEmail" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientPhone">Phone</label>
+                                    <input type="tel" id="clientPhone" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientAddress">Street Address</label>
+                                <input type="text" id="clientAddress" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientCity">City</label>
+                                    <input type="text" id="clientCity" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientState">State</label>
+                                    <input type="text" id="clientState" required maxlength="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientZip">ZIP Code</label>
+                                    <input type="text" id="clientZip" required maxlength="10">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientStartDate">Service Start Date</label>
+                                    <input type="date" id="clientStartDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientEndDate">Service End Date</label>
+                                    <input type="date" id="clientEndDate">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group status-group">
+                                    <label>Status</label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="clientStatus" checked>
+                                        <label for="clientStatus" class="toggle-label">
+                                            <span class="toggle-inner"></span>
+                                            <span class="toggle-switch"></span>
+                                        </label>
+                                        <span class="status-text">Active</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group notes-group">
+                                    <label for="clientNotes">Notes</label>
+                                    <textarea id="clientNotes" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="footer-right">
+                                    <button type="button" onclick="closeClientModal()" class="button secondary">Cancel</button>
+                                    <button type="submit" class="button primary">Save Client</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="deleteButtonContainer" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+                            <button onclick="deleteClient(document.getElementById('clientForm').dataset.clientId)" class="button danger">
+                                <i class="fas fa-trash"></i> Delete Client
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/crm.js"></script>
+</body>
+</html> 
