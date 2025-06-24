@@ -52,17 +52,17 @@
                 </div>
             </div>
 
-            <!-- Invoice Filters -->
-            <div class="invoice-filters">
-                <button onclick="filterInvoices('all')" class="filter-button active" data-filter="all">All</button>
-                <button onclick="filterInvoices('draft')" class="filter-button" data-filter="draft">Draft</button>
-                <button onclick="filterInvoices('due')" class="filter-button" data-filter="due">Due</button>
-                <button onclick="filterInvoices('past due')" class="filter-button" data-filter="past due">Past Due</button>
-                <button onclick="filterInvoices('paid')" class="filter-button" data-filter="paid">Paid</button>
-            </div>
-
             <!-- Invoice List View -->
             <div id="invoiceListView" class="invoice-section">
+                <!-- Invoice Filters -->
+                <div class="invoice-filters">
+                    <button onclick="filterInvoices('all')" class="filter-button active" data-filter="all">All</button>
+                    <button onclick="filterInvoices('draft')" class="filter-button" data-filter="draft">Draft</button>
+                    <button onclick="filterInvoices('due')" class="filter-button" data-filter="due">Due</button>
+                    <button onclick="filterInvoices('past due')" class="filter-button" data-filter="past due">Past Due</button>
+                    <button onclick="filterInvoices('paid')" class="filter-button" data-filter="paid">Paid</button>
+                </div>
+
                 <table class="invoice-list-table">
                     <thead>
                         <tr>
