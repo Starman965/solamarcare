@@ -7,10 +7,7 @@ const dashboardData = {
     revenueCollected: 0,
     revenueDue: 0,
     revenuePastDue: 0,
-    revenueDraft: 0,
-    recentClients: [],
-    recentInvoices: [],
-    upcomingVisits: []
+    revenueDraft: 0
 };
 
 const REVENUE_GOAL = 1000; // $1,000 goal
@@ -51,13 +48,6 @@ async function initializeDashboard() {
             console.log('Revenue metrics loaded successfully');
         } catch (error) {
             console.error('Error loading revenue metrics:', error);
-        }
-
-        try {
-            await loadRecentActivity();
-            console.log('Recent activity loaded successfully');
-        } catch (error) {
-            console.error('Error loading recent activity:', error);
         }
 
         console.log('All metrics loaded, updating UI...', dashboardData);
@@ -102,18 +92,7 @@ async function loadClientMetrics() {
         console.log('Loading client metrics...');
         const clientsSnapshot = await db.collection('clients').get();
         dashboardData.activeClients = clientsSnapshot.docs.filter(doc => doc.data().isActive).length;
-        
-        // Get recent clients (last 5)
-        const recentClientsSnapshot = await db.collection('clients')
-            .orderBy('createdAt', 'desc')
-            .limit(5)
-            .get();
-        
-        dashboardData.recentClients = recentClientsSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        console.log('Client metrics loaded:', { activeClients: dashboardData.activeClients, recentClientsCount: dashboardData.recentClients.length });
+        console.log('Client metrics loaded:', { activeClients: dashboardData.activeClients });
     } catch (error) {
         console.error('Error loading client metrics:', error);
         throw error;
@@ -134,7 +113,6 @@ async function loadRevenueMetrics() {
         let revenueDue = 0;            // Only Due
         let revenuePastDue = 0;        // Only Past Due
         let revenueDraft = 0;          // Only Draft
-        const recentInvoices = [];
 
         // Process each invoice
         for (const invoice of invoicesSnapshot.docs) {
@@ -168,13 +146,6 @@ async function loadRevenueMetrics() {
                     revenueDraft += amount;
                     break;
             }
-
-            // Add to recent invoices
-            recentInvoices.push({
-                id: invoice.id,
-                ...invoiceData,
-                total: amount // Ensure we store the numeric value
-            });
         }
 
         console.log('Final revenue calculations:', {
@@ -196,72 +167,16 @@ async function loadRevenueMetrics() {
             revenueDraft
         });
 
-        // Sort and limit recent invoices
-        dashboardData.recentInvoices = recentInvoices
-            .sort((a, b) => {
-                const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt);
-                const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);
-                return dateB - dateA;
-            })
-            .slice(0, 5);
-
         console.log('Revenue metrics loaded:', {
             totalRevenueEarned,
             totalRevenueCollected,
             totalRevenueBilled,
             revenueDue,
             revenuePastDue,
-            revenueDraft,
-            recentInvoicesCount: dashboardData.recentInvoices.length
+            revenueDraft
         });
     } catch (error) {
         console.error('Error in loadRevenueMetrics:', error);
-        throw error;
-    }
-}
-
-// Load Recent Activity
-async function loadRecentActivity() {
-    console.log('Starting to load recent activity...');
-    try {
-        const clientsSnapshot = await db.collection('clients').get();
-        const upcomingVisits = [];
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // Get upcoming visits for each client
-        for (const clientDoc of clientsSnapshot.docs) {
-            const clientData = clientDoc.data();
-            console.log(`Processing visits for client: ${clientData.firstName} ${clientData.lastName}`);
-
-            const visitsSnapshot = await clientDoc.ref.collection('serviceVisits')
-                .where('date', '>=', today)
-                .orderBy('date', 'asc')
-                .limit(3)
-                .get();
-
-            console.log(`Found ${visitsSnapshot.size} upcoming visits for client`);
-
-            visitsSnapshot.forEach(visit => {
-                upcomingVisits.push({
-                    id: visit.id,
-                    clientId: clientDoc.id,
-                    clientName: `${clientData.firstName} ${clientData.lastName}`,
-                    ...visit.data()
-                });
-            });
-        }
-
-        // Sort and limit upcoming visits
-        dashboardData.upcomingVisits = upcomingVisits
-            .sort((a, b) => (a.date?.toDate() || 0) - (b.date?.toDate() || 0))
-            .slice(0, 5);
-
-        console.log('Recent activity loaded:', {
-            upcomingVisitsCount: dashboardData.upcomingVisits.length
-        });
-    } catch (error) {
-        console.error('Error in loadRecentActivity:', error);
         throw error;
     }
 }
@@ -308,11 +223,6 @@ function updateDashboardUI() {
         // Update revenue goal progress
         updateRevenueGoalProgress(dashboardData.totalRevenue);
         
-        // Update activity lists
-        updateRecentClientsList();
-        updateRecentInvoicesList();
-        updateUpcomingVisitsList();
-        
         console.log('Dashboard UI updated successfully');
     } catch (error) {
         console.error('Error updating dashboard UI:', error);
@@ -344,89 +254,6 @@ function formatCurrency(amount) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     }).format(numericAmount);
-}
-
-function formatDate(date) {
-    if (!date) return 'No date';
-    if (typeof date === 'object' && date.toDate) {
-        date = date.toDate();
-    }
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-}
-
-function updateRecentClientsList() {
-    const container = document.getElementById('recentClientsList');
-    if (!container) return;
-
-    container.innerHTML = dashboardData.recentClients.map(client => `
-        <div class="activity-item client-item" onclick="window.location.href='clients.html#${client.id}'">
-            <div class="activity-icon">
-                <i class="fas fa-user-plus"></i>
-            </div>
-            <div class="activity-details">
-                <div class="activity-title">${client.firstName} ${client.lastName}</div>
-                <div class="activity-subtitle">Added ${formatDate(client.createdAt)}</div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function updateRecentInvoicesList() {
-    const container = document.getElementById('recentInvoicesList');
-    if (!container) return;
-
-    if (dashboardData.recentInvoices.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-file-invoice"></i>
-                <p>No recent invoices</p>
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = dashboardData.recentInvoices.map(invoice => `
-        <div class="activity-item invoice-item" onclick="window.location.href='invoices.html#${invoice.id}'">
-            <div class="activity-icon">
-                <i class="fas fa-file-invoice-dollar"></i>
-            </div>
-            <div class="activity-details">
-                <div class="activity-title">Invoice #${invoice.invoiceNumber}</div>
-                <div class="activity-subtitle">
-                    ${invoice.clientName} - ${formatCurrency(invoice.total)}
-                    <span class="status-badge ${invoice.status.toLowerCase().replace(' ', '-')}">
-                        ${invoice.status}
-                    </span>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function updateUpcomingVisitsList() {
-    const container = document.getElementById('upcomingVisitsList');
-    if (!container) return;
-
-    container.innerHTML = dashboardData.upcomingVisits.map(visit => `
-        <div class="activity-item visit-item" onclick="window.location.href='visits.html#${visit.id}'">
-            <div class="activity-icon">
-                <i class="fas fa-calendar-check"></i>
-            </div>
-            <div class="activity-details">
-                <div class="activity-title">${visit.clientName}</div>
-                <div class="activity-subtitle">
-                    Scheduled for ${formatDate(visit.date)}
-                    <span class="status-badge ${visit.status.toLowerCase()}">
-                        ${visit.status}
-                    </span>
-                </div>
-            </div>
-        </div>
-    `).join('');
 }
 
 function showErrorMessage(message) {

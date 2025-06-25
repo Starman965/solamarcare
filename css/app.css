@@ -370,40 +370,38 @@ body {
 
 /* Action Button Style */
 .action-button {
-    height: 40px;
-    padding: 0 1.5rem;
-    background-color: var(--secondary-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
     font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .action-button i {
     font-size: 0.9rem;
-    transition: transform 0.2s ease;
 }
 
 .action-button:hover {
-    background-color: #2980b9;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+    background: #2980b9;
+    transform: translateY(-1px);
 }
 
-.action-button:hover i {
-    transform: translateX(2px);
+.action-button.secondary {
+    background: #f1f5f9;
+    color: #475569;
+    margin-right: 0.75rem;
 }
 
-.action-button:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(52, 152, 219, 0.2);
+.action-button.secondary:hover {
+    background: #e2e8f0;
+    color: #1e293b;
 }
 
 /* Card Action Buttons */
@@ -594,54 +592,41 @@ select:disabled {
     cursor: not-allowed;
 }
 
-/* Modal */
+/* Modal Styles */
 .modal {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
     z-index: 1000;
-    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
+    visibility: visible;
+    display: block;
 }
 
 .modal-content {
+    position: relative;
     background: white;
-    padding: 2rem;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 800px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    margin: auto; /* Ensure horizontal centering */
-    transform: translateX(0); /* Reset any transform */
+    width: 90%;
+    max-width: 600px;
+    margin: 2rem auto;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
 }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    position: relative;
-    padding-right: 3rem;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+.modal.show .modal-content {
+    transform: translateY(0);
 }
 
 /* Status Indicators */
@@ -1214,8 +1199,22 @@ select:disabled {
 
 /* Form Groups */
 .form-group {
-    min-width: 0;
-    width: fit-content;
+    margin-bottom: 1rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
 }
 
 /* Notes field specific styling */
@@ -1355,4 +1354,583 @@ body.modal-open {
 
 #dashboardSection .section-header {
     margin-bottom: 2rem;
+}
+
+/* Add these styles for the services page */
+
+/* Categories Grid */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.category-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.category-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.category-icon {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.category-content {
+    flex: 1;
+}
+
+.category-content h3 {
+    margin: 0 0 0.75rem 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.category-content p {
+    margin: 0 0 1.25rem 0;
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.category-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.category-actions button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.category-actions button i {
+    font-size: 0.9rem;
+}
+
+.category-actions .button.secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+}
+
+.category-actions .button.danger {
+    background: #fef2f2;
+    color: #dc2626;
+    border: none;
+}
+
+.category-actions .button:hover {
+    transform: translateY(-1px);
+}
+
+/* Services Grid */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.service-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.service-card.inactive {
+    opacity: 0.7;
+}
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.service-header h3 {
+    margin: 0;
+    color: var(--text-dark);
+}
+
+.service-category {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.service-content {
+    margin-bottom: 1rem;
+}
+
+.service-content p {
+    margin: 0 0 1rem 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.service-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.service-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Icon Selector */
+.icon-selector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.icon-selector input {
+    flex: 1;
+}
+
+.icon-selector i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+/* Status Badge */
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background: var(--success-light);
+    color: var(--success-dark);
+}
+
+.status-badge.inactive {
+    background: var(--warning-light);
+    color: var(--warning-dark);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toggle-switch input[type="checkbox"] {
+    appearance: none;
+    width: 40px;
+    height: 20px;
+    background: var(--border-color);
+    border-radius: 20px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.toggle-switch input[type="checkbox"]:checked {
+    background: var(--success-color);
+}
+
+.toggle-switch input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
+}
+
+.toggle-switch input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
+}
+
+.toggle-switch label {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Section Spacing */
+.categories-section,
+.services-section {
+    margin-bottom: 2rem;
+}
+
+/* Search Box Enhancements */
+.search-box {
+    position: relative;
+    flex: 1;
+    max-width: 300px;
+}
+
+.search-box input {
+    padding-right: 2.5rem;
+}
+
+.search-box i {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+/* Button Variations */
+.button.success {
+    background: var(--success-color);
+    color: white;
+}
+
+.button.warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+.button.danger {
+    background: var(--accent-color);
+    color: white;
+}
+
+/* Modal Enhancements */
+.modal-content {
+    max-width: 500px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+/* Category Description Specific Styles */
+#categoryDescription {
+    min-height: 120px;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+/* Icon Picker */
+.icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.icon-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.icon-option:hover {
+    background-color: var(--light-bg);
+    transform: translateY(-2px);
+}
+
+.icon-option i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.icon-option span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.icon-selector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.icon-selector input {
+    flex: 1;
+    background: var(--light-bg);
+    cursor: pointer;
+}
+
+.icon-selector button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+.icon-selector button i {
+    font-size: 1.2rem;
+}
+
+/* Modal Content Sizes */
+.modal-content {
+    position: relative;
+    background: white;
+    width: 90%;
+    max-width: 600px;
+    margin: 2rem auto;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+/* Client Modal - Wider */
+#clientModal .modal-content {
+    max-width: 800px;
+}
+
+/* Category Modal - Custom Styles */
+#categoryModal .modal-content {
+    max-width: 700px;
+}
+
+#categoryModal .modal-body {
+    padding: 1rem 1.5rem;
+    width: 100%;
+}
+
+#categoryModal .form-group {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+#categoryModal .form-group label {
+    margin-bottom: 0.5rem;
+    display: block;
+    font-weight: 500;
+}
+
+#categoryModal .form-group textarea {
+    min-height: 120px;
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+#categoryModal .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+#categoryModal .icon-selector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+#categoryModal .icon-selector input {
+    flex: 1;
+    background: var(--light-bg);
+    cursor: pointer;
+}
+
+#categoryModal .icon-selector button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+#categoryModal .icon-selector button i {
+    font-size: 1.2rem;
+}
+
+/* Service Modal - Custom Styles */
+#serviceModal .modal-content {
+    max-width: 700px;
+}
+
+#serviceModal .modal-body {
+    padding: 1rem 1.5rem;
+    width: 100%;
+}
+
+#serviceModal .form-group {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+#serviceModal .form-group label {
+    margin-bottom: 0.5rem;
+    display: block;
+    font-weight: 500;
+}
+
+#serviceModal .form-group textarea {
+    min-height: 120px;
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+#serviceModal .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+#serviceModal .form-group select,
+#serviceModal .form-group input[type="text"],
+#serviceModal .form-group input[type="number"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+#serviceModal .form-group select:focus,
+#serviceModal .form-group input[type="text"]:focus,
+#serviceModal .form-group input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+/* Tabs Navigation */
+.tabs-navigation {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.tab-button {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.tab-button i {
+    font-size: 1rem;
+}
+
+.tab-button:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-dark);
+}
+
+.tab-button.active {
+    background: #2c3e50;
+    color: white;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    padding: 1rem 1.5rem;
+}
+
+.tab-content.active {
+    display: block;
 } 

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solamar Care - Services</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Solamar Care - Services">
+    <meta name="description" content="Internal service management system for Solamar Care">
+    
+    <!-- iOS/Apple specific -->
+    <link rel="apple-touch-icon" href="images/solamar_marc.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/solamar_marc.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="dashboard-nav">
+            <div class="nav-logo">
+                <img src="images/solamar_care_logo_white.png" alt="Solamar Care Logo">
+                <span>Solamar Care Management</span>
+            </div>
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-button"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="clients.html" class="nav-button"><i class="fas fa-users"></i> Clients</a>
+                <a href="visits.html" class="nav-button"><i class="fas fa-calendar-check"></i> Visits</a>
+                <a href="invoices.html" class="nav-button"><i class="fas fa-file-invoice-dollar"></i> Invoices</a>
+                <a href="services.html" class="nav-button active"><i class="fas fa-tools"></i> Services</a>
+                <a href="marketing.html" class="nav-button"><i class="fas fa-bullhorn"></i> Marketing</a>
+                <button onclick="handleLogout()" class="nav-button logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </nav>
+
+        <main class="dashboard-main">
+            <!-- Tabs Navigation -->
+            <div class="tabs-navigation">
+                <button class="tab-button active" onclick="switchTab('categories')">
+                    <i class="fas fa-folder"></i> Categories
+                </button>
+                <button class="tab-button" onclick="switchTab('services')">
+                    <i class="fas fa-tools"></i> Services
+                </button>
+            </div>
+
+            <!-- Categories Section -->
+            <section id="categoriesTab" class="tab-content active">
+                <div class="section-header">
+                    <h2>Service Categories</h2>
+                    <div class="header-actions">
+                        <button onclick="showAddCategoryModal()" class="action-button">
+                            <i class="fas fa-plus"></i> Add Category
+                        </button>
+                    </div>
+                </div>
+                <div id="categoriesList" class="categories-grid">
+                    <!-- Categories will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Services Section -->
+            <section id="servicesTab" class="tab-content">
+                <div class="section-header">
+                    <h2>Services</h2>
+                    <div class="header-actions">
+                        <button onclick="showAddServiceModal()" class="action-button">
+                            <i class="fas fa-plus"></i> Add Service
+                        </button>
+                    </div>
+                </div>
+                <div id="servicesList" class="services-grid">
+                    <!-- Services will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Category Modal -->
+            <div id="categoryModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="categoryModalTitle">Add New Category</h3>
+                        <button onclick="closeCategoryModal()" class="close-button">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="categoryForm">
+                            <div class="form-group">
+                                <label for="categoryName">Category Name</label>
+                                <input type="text" id="categoryName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="categoryIcon">Icon</label>
+                                <div class="icon-selector">
+                                    <input type="text" id="categoryIcon" required readonly>
+                                    <button type="button" onclick="showIconPicker()" class="button secondary">
+                                        <i id="iconPreview" class="fas fa-icons"></i>
+                                        Choose Icon
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="categoryDescription">Description</label>
+                                <textarea id="categoryDescription" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button onclick="closeCategoryModal()" class="button secondary">Cancel</button>
+                        <button onclick="saveCategory()" class="button primary">Save Category</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Icon Picker Modal -->
+            <div id="iconPickerModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Choose an Icon</h3>
+                        <button onclick="document.getElementById('iconPickerModal').classList.remove('show')" class="close-button">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="iconPickerGrid" class="icon-picker-grid">
+                            <!-- Icons will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Modal -->
+            <div id="serviceModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="serviceModalTitle">Add New Service</h3>
+                        <button onclick="closeServiceModal()" class="close-button">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="serviceForm">
+                            <div class="form-group">
+                                <label for="serviceName">Service Name</label>
+                                <input type="text" id="serviceName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="serviceCategory">Category</label>
+                                <select id="serviceCategory" required>
+                                    <!-- Categories will be loaded here -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="serviceDescription">Description</label>
+                                <textarea id="serviceDescription" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="defaultDuration">Default Duration (minutes)</label>
+                                <input type="number" id="defaultDuration" min="5" step="5" value="15">
+                            </div>
+                            <div class="form-group">
+                                <label for="isActive">Status</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="isActive" checked>
+                                    <label for="isActive">Active</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button onclick="closeServiceModal()" class="button secondary">Cancel</button>
+                        <button onclick="saveService()" class="button primary">Save Service</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/services.js"></script>
+</body>
+</html> 
