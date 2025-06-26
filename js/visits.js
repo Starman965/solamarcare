@@ -69,7 +69,10 @@ async function initializeVisitsPage() {
 // Load Visits
 async function loadVisits() {
     try {
-        const visitsSnapshot = await db.collection('visits').orderBy('scheduledDateTime', 'desc').get();
+        const visitsSnapshot = await db.collection('visits')
+            .orderBy('status', 'asc') // Put SCHEDULED and IN_PROGRESS first
+            .orderBy('scheduledDateTime', 'desc') // Then sort by date
+            .get();
         
         // Get all unique client IDs from visits
         const clientIds = new Set();
@@ -93,7 +96,7 @@ async function loadVisits() {
             };
         });
         
-        // Map visits with client data
+        // Map visits with client data and sort them
         currentVisits = visitsSnapshot.docs.map(doc => {
             const visit = { id: doc.id, ...doc.data() };
             const clientData = clientsMap[visit.clientId] || {};
@@ -102,6 +105,33 @@ async function loadVisits() {
                 clientName: clientData.name || 'Unknown Client',
                 clientAddress: clientData.address
             };
+        });
+
+        // Custom sort to prioritize upcoming visits
+        currentVisits.sort((a, b) => {
+            // Define status priority (lower number = higher priority)
+            const statusPriority = {
+                'SCHEDULED': 0,
+                'IN_PROGRESS': 1,
+                'COMPLETED': 2,
+                'CANCELLED': 3
+            };
+
+            // First sort by status priority
+            const statusDiff = (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99);
+            if (statusDiff !== 0) return statusDiff;
+
+            // For same status, sort by date
+            const aDate = new Date(a.scheduledDateTime);
+            const bDate = new Date(b.scheduledDateTime);
+
+            // For scheduled/in-progress, show upcoming first
+            if (a.status === 'SCHEDULED' || a.status === 'IN_PROGRESS') {
+                return aDate - bDate; // ascending (upcoming first)
+            }
+            
+            // For completed/cancelled, show recent first
+            return bDate - aDate; // descending (recent first)
         });
         
         updateVisitsList();
@@ -155,20 +185,28 @@ function createVisitCard(visit) {
 
     // Format completed date/time if visit is completed
     let dateTimeInfo = '';
+    let billingInfo = '';
     if (visit.status === 'COMPLETED' && visit.completedDateTime) {
         const completedDate = formatDateTime(visit.completedDateTime);
         dateTimeInfo = `
             <div class="visit-completed">
                 <i class="fas fa-check-circle"></i>
-                Completed: ${completedDate}
-                ${billingStatus === VISIT_BILLING_STATUS.BILLED ? '<span class="billing-status billed"><i class="fas fa-file-invoice-dollar"></i> Billed</span>' : ''}
+                ${completedDate}
+            </div>
+        `;
+        billingInfo = `
+            <div class="visit-secondary-info">
+                <div class="billing-status ${billingStatus.toLowerCase()}">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    ${billingStatus}
+                </div>
             </div>
         `;
     } else {
         dateTimeInfo = `
             <div class="visit-datetime">
                 <i class="fas fa-calendar"></i>
-                Scheduled: ${scheduledDate}
+                ${scheduledDate}
             </div>
         `;
     }
@@ -205,8 +243,10 @@ function createVisitCard(visit) {
             </div>
             <div class="visit-status ${statusClass}" onclick="event.stopPropagation(); showStatusModal(event, '${visit.id}')">
                 ${visit.status || 'Unknown'}
+                <i class="fas fa-chevron-down"></i>
             </div>
         </div>
+        ${billingInfo}
         <div class="visit-services">
             ${(visit.services || []).map(service => `
                 <span class="service-tag">${service.name}</span>
@@ -494,6 +534,13 @@ async function showAddVisitModal() {
     // Update modal title
     document.getElementById('visitModalTitle').textContent = 'Schedule New Visit';
     
+    // Clear billing status
+    const billingStatusElement = document.querySelector('.billing-status');
+    if (billingStatusElement) {
+        billingStatusElement.innerHTML = '';
+        billingStatusElement.className = 'billing-status';
+    }
+    
     // Show first tab
     document.querySelectorAll('.tab-item').forEach((btn, index) => {
         btn.classList.toggle('active', index === 0);
@@ -517,8 +564,22 @@ function closeVisitModal() {
     modal.classList.remove('show');
     setTimeout(() => {
         modal.style.display = 'none';
-        document.getElementById('visitForm').reset();
+        
+        // Reset form
+        const form = document.getElementById('visitForm');
+        form.reset();
+        
+        // Clear selected services
         document.getElementById('selectedServices').innerHTML = '';
+        
+        // Clear billing status
+        const billingStatusElement = document.querySelector('.billing-status');
+        if (billingStatusElement) {
+            billingStatusElement.innerHTML = '';
+            billingStatusElement.className = 'billing-status';
+        }
+        
+        // Reset state
         editingVisitId = null;
         document.getElementById('visitModalTitle').textContent = 'Schedule New Visit';
     }, 300);

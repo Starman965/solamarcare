@@ -1,7 +1,7 @@
 /* Dashboard Layout */
 .dashboard-container {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;
     background: #f8f9fa;
 }
 
@@ -16,46 +16,78 @@
 .dashboard-main {
     flex: 1;
     padding: 1.5rem;
-    overflow-y: auto;
     background: #f8f9fa;
     max-width: 1600px;
     margin: 0 auto;
     width: 100%;
 }
 
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
+.page-title {
+    font-size: 1.25rem;
+    color: #2d3748;
+    margin: 0 0 1rem 0;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    color: #2d3748;
+    margin: 1.5rem 0 1rem 0;
+}
+
+/* Goal Card */
+.goal-card {
+    background: #ffcb5a;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.goal-card h3 {
+    color: black;
+    font-size: 1.2rem;
+    margin: 0 0 0.75rem 0;
+}
+
+.progress-bar-container {
     width: 100%;
+    height: 16px;
+    background-color: #ffcb5a;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    border: none;
 }
 
-/* KPI Section */
-.kpi-section {
-    margin-bottom: 2rem;
+.progress-bar {
+    height: 100%;
+    background: #000000;
+    width: 0;
+    transition: width 0.5s ease-in-out;
 }
 
+.goal-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    color: black;
+}
+
+/* KPI Grid */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
 }
 
+/* KPI Cards */
 .kpi-card {
     background: white;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .kpi-icon {
@@ -67,6 +99,7 @@
     align-items: center;
     justify-content: center;
     margin-right: 1rem;
+    flex-shrink: 0;
 }
 
 .kpi-icon i {
@@ -81,16 +114,17 @@
 .kpi-content h3 {
     font-size: 0.875rem;
     color: #6c757d;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.25rem 0;
 }
 
 .kpi-value {
     font-size: 1.5rem;
     font-weight: 600;
     color: #2d3748;
+    line-height: 1.2;
 }
 
-/* KPI Card Variants */
+/* Card Variants */
 .kpi-card.success .kpi-icon {
     background: #e6f4ea;
 }
@@ -127,18 +161,16 @@
 .dashboard-section {
     background: white;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.25rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    min-height: 200px;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    margin: 0;
 }
 
 .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .section-header h2 {
@@ -434,33 +466,40 @@
     border-radius: 12px;
 }
 
+/* Goal Card Styling */
 .goal-card {
-    background: linear-gradient(135deg, #6c5ce7, #a367dc);
-    color: white;
+    background: #ffcb5a !important;
+    color: black !important;
+    padding: 1rem !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
 }
 
-.goal-card .kpi-content h3,
-.goal-card .goal-stats {
-    color: white;
+.goal-card .kpi-content h3 {
+    color: black !important;
+    font-size: 1.2rem !important;
+    margin-bottom: 0.75rem !important;
 }
 
 .goal-progress {
-    margin-top: 10px;
+    margin-top: 0.5rem;
     width: 100%;
 }
 
 .progress-bar-container {
     width: 100%;
-    height: 12px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
+    height: 16px;
+    background-color: #ffcb5a;
+    border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 10px;
+    margin-bottom: 0.75rem;
+    border: none;
 }
 
 .progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #ffffff, rgba(255, 255, 255, 0.8));
+    background: #000000;
     width: 0;
     transition: width 0.5s ease-in-out;
 }
@@ -469,15 +508,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
+    color: black !important;
+    margin: 0;
 }
 
 .goal-stats span {
     font-weight: 600;
+    color: black !important;
 }
 
 #revenueGoalPercentage {
-    font-size: 1.1rem;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: black !important;
 }
 
 .metric-section {
@@ -497,19 +541,11 @@
     border-bottom: 2px solid #f5f6fa;
 }
 
+/* Remove any fixed heights from variants */
+.kpi-card.success,
+.kpi-card.warning,
+.kpi-card.danger,
+.kpi-card.info,
 .kpi-card.primary {
-    background: linear-gradient(135deg, #2c3e50, #3498db);
-    color: white;
-}
-
-.kpi-card.primary .kpi-content h3,
-.kpi-card.primary .kpi-value {
-    color: white;
-}
-
-.kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
+    height: auto;
 } 

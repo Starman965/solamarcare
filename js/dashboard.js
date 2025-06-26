@@ -219,7 +219,8 @@ function updateDashboardUI() {
             }
         });
         
-        // Update revenue goal progress
+        // Update revenue goal progress with total revenue
+        console.log('Updating revenue goal progress with:', dashboardData.totalRevenue);
         updateRevenueGoalProgress(dashboardData.totalRevenue);
         
         console.log('Dashboard UI updated successfully');
@@ -273,24 +274,40 @@ function showErrorMessage(message) {
 
 // Update Revenue Goal Progress
 function updateRevenueGoalProgress(currentRevenue) {
+    console.log('Starting updateRevenueGoalProgress with currentRevenue:', currentRevenue);
+    
     const progressPercentage = Math.min((currentRevenue / REVENUE_GOAL) * 100, 100);
+    console.log('Calculated progress percentage:', progressPercentage);
     
     // Update progress bar
     const progressBar = document.getElementById('revenueGoalBar');
+    console.log('Progress bar element:', progressBar);
     if (progressBar) {
         progressBar.style.width = `${progressPercentage}%`;
+        console.log('Set progress bar width to:', `${progressPercentage}%`);
+    } else {
+        console.warn('Progress bar element not found!');
     }
     
     // Update percentage text
     const percentageElement = document.getElementById('revenueGoalPercentage');
+    console.log('Percentage element:', percentageElement);
     if (percentageElement) {
         percentageElement.textContent = `${Math.round(progressPercentage)}%`;
+        console.log('Set percentage text to:', `${Math.round(progressPercentage)}%`);
+    } else {
+        console.warn('Percentage element not found!');
     }
     
     // Update amount text
     const amountElement = document.getElementById('revenueGoalAmount');
+    console.log('Amount element:', amountElement);
     if (amountElement) {
-        amountElement.textContent = `${formatCurrency(currentRevenue)} / ${formatCurrency(REVENUE_GOAL)}`;
+        const text = `${formatCurrency(currentRevenue)} / ${formatCurrency(REVENUE_GOAL)}`;
+        amountElement.textContent = text;
+        console.log('Set amount text to:', text);
+    } else {
+        console.warn('Amount element not found!');
     }
 }
 

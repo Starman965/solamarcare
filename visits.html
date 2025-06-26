@@ -100,6 +100,10 @@
                                         <i class="fas fa-sticky-note"></i>
                                         <span>Notes</span>
                                     </button>
+                                    <button type="button" class="tab-item" data-tab="instructions">
+                                        <i class="fas fa-question-circle"></i>
+                                        <span>Instructions</span>
+                                    </button>
                                 </div>
                             </div>
 
@@ -132,7 +136,7 @@
                                                 <input type="time" id="timeScheduled" name="timeScheduled" required>
                                             </div>
                                         </div>
-                                        <div class="form-row">
+                                        <div class="form-row three-columns">
                                             <div class="form-group">
                                                 <label for="dateCompleted">
                                                     <i class="fas fa-calendar-check"></i>
@@ -147,13 +151,13 @@
                                                 </label>
                                                 <input type="time" id="timeCompleted">
                                             </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="timeToComplete">
-                                                <i class="fas fa-hourglass-half"></i>
-                                                Time to Complete (minutes)
-                                            </label>
-                                            <input type="number" id="timeToComplete" min="0">
+                                            <div class="form-group">
+                                                <label for="timeToComplete">
+                                                    <i class="fas fa-hourglass-half"></i>
+                                                    Time to Complete
+                                                </label>
+                                                <input type="number" id="timeToComplete" min="0" placeholder="Minutes">
+                                            </div>
                                         </div>
                                         <div class="form-group">
                                             <label>
@@ -199,6 +203,42 @@
                                             </label>
                                             <textarea id="visitNotes" rows="6" 
                                                 placeholder="Add any notes or special instructions for this visit..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-panel" id="instructionsTab">
+                                    <div class="form-section">
+                                        <h3>Visit Instructions</h3>
+                                        <div class="instructions-content">
+                                            <div class="requirement-section">
+                                                <h4>Required for Scheduling:</h4>
+                                                <ul>
+                                                    <li><i class="fas fa-check-circle"></i> Select a client</li>
+                                                    <li><i class="fas fa-check-circle"></i> Set scheduled date</li>
+                                                    <li><i class="fas fa-check-circle"></i> Set scheduled time</li>
+                                                    <li><i class="fas fa-check-circle"></i> Add at least one service</li>
+                                                </ul>
+                                            </div>
+                                            <div class="requirement-section">
+                                                <h4>For Completed Visits:</h4>
+                                                <ul>
+                                                    <li><i class="fas fa-info-circle"></i> Both completion date AND time must be filled if either is provided</li>
+                                                    <li><i class="fas fa-info-circle"></i> Actual duration can be logged in "Time to Complete"</li>
+                                                    <li><i class="fas fa-info-circle"></i> Visit status must be set to "Completed"</li>
+                                                </ul>
+                                            </div>
+                                            <div class="requirement-section">
+                                                <h4>Visit Status Flow:</h4>
+                                                <div class="status-flow">
+                                                    <span class="status scheduled">Scheduled</span>
+                                                    <i class="fas fa-arrow-right"></i>
+                                                    <span class="status in-progress">In Progress</span>
+                                                    <i class="fas fa-arrow-right"></i>
+                                                    <span class="status completed">Completed</span>
+                                                </div>
+                                                <p class="status-note">* Visits can be cancelled at any stage</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
