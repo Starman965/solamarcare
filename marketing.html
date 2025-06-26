@@ -20,6 +20,61 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/app.css">
+    
+    <style>
+        .marketing-materials {
+            padding: 1rem;
+        }
+        
+        .material-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .material-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+        
+        .material-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .material-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .material-thumb {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .material-info {
+            padding: 1rem;
+        }
+        
+        .material-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .material-info p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -40,22 +95,41 @@
         </nav>
 
         <main class="dashboard-main">
-            <div class="section-header">
-                <h2>Marketing Campaigns</h2>
-                <div class="header-actions">
-                    <div class="search-box">
-                        <input type="text" id="campaignSearch" placeholder="Search campaigns...">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <button onclick="showAddCampaignModal()" class="action-button">
-                        <i class="fas fa-plus"></i> New Campaign
-                    </button>
-                </div>
-            </div>
+            
 
             <!-- Campaigns List -->
             <div id="campaignsList" class="data-list">
                 <!-- Campaigns will be loaded here -->
+            </div>
+
+            <!-- Marketing Materials Section -->
+            <div class="section-header" style="margin-top: 2rem;">
+                <h2>Marketing Materials</h2>
+            </div>
+            <div class="marketing-materials">
+                <div class="material-grid">
+                    <!-- Cover Letter -->
+                    <div class="material-card">
+                        <a href="Cover_Letter_v1.pdf" target="_blank" class="material-link">
+                            <img src="images/Cover_Thumb1.png" alt="Cover Letter Preview" class="material-thumb">
+                            <div class="material-info">
+                                <h3>Cover Letter</h3>
+                                <p>Personal introduction and service overview</p>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Service Flyer -->
+                    <div class="material-card">
+                        <a href="Solamar_Care_Flyer.pdf" target="_blank" class="material-link">
+                            <img src="images/Flyer_Thumb1.png" alt="Service Flyer Preview" class="material-thumb">
+                            <div class="material-info">
+                                <h3>Service Flyer</h3>
+                                <p>Detailed service offerings and benefits</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <!-- Campaign Modal - Placeholder -->
