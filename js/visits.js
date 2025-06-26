@@ -225,15 +225,15 @@ function handleVisitSearch(event) {
 
 // Filter visits based on search and status
 function filterVisits() {
-    const searchTerm = document.getElementById('visitSearch').value.toLowerCase();
-    const activeFilter = document.querySelector('.filter-tab.active').dataset.filter;
+    const searchTerm = document.getElementById('visitSearch')?.value.toLowerCase() || '';
+    const activeFilter = document.querySelector('.filter-tab.active')?.dataset.filter || 'all';
     const container = document.getElementById('visitsList');
     
     if (!container) return;
 
     const filteredVisits = currentVisits.filter(visit => {
         const matchesSearch = 
-            visit.clientName.toLowerCase().includes(searchTerm) ||
+            (visit.clientName || '').toLowerCase().includes(searchTerm) ||
             (visit.services || []).some(service => service.name.toLowerCase().includes(searchTerm)) ||
             (visit.status || '').toLowerCase().includes(searchTerm);
             
@@ -247,15 +247,27 @@ function filterVisits() {
         return;
     }
 
-    container.innerHTML = filteredVisits.map(visit => createVisitCard(visit)).join('');
+    // Clear the container and append each visit card
+    container.innerHTML = '';
+    filteredVisits.forEach(visit => {
+        const card = createVisitCard(visit);
+        container.appendChild(card);
+    });
 }
 
 // Initialize filter tabs
 function initializeFilterTabs() {
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            // Update active tab
-            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    const tabButtons = document.querySelectorAll('.filter-tab');
+    
+    tabButtons.forEach(tab => {
+        tab.addEventListener('click', (event) => {
+            // Prevent default button behavior
+            event.preventDefault();
+            
+            // Remove active class from all tabs
+            tabButtons.forEach(t => t.classList.remove('active'));
+            
+            // Add active class to clicked tab
             tab.classList.add('active');
             
             // Filter visits

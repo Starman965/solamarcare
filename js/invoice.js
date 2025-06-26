@@ -16,7 +16,6 @@ let currentInvoices = [];
 let hasUnsavedChanges = false;
 let isInvoiceFormOpen = false;
 let currentFilter = 'all';
-let selectedVisits = new Set(); // Track selected visits to prevent duplicates
 
 // Track changes in the form
 function trackInvoiceChanges() {
@@ -40,12 +39,10 @@ function checkUnsavedChanges() {
 function toggleInvoiceView(view, skipChangeCheck = false) {
     const listView = document.getElementById('invoiceListView');
     const createView = document.getElementById('invoiceCreateView');
-    const searchBox = document.querySelector('.header-actions .search-box');
     
     if (view === 'create') {
         listView.style.display = 'none';
         createView.style.display = 'block';
-        if (searchBox) searchBox.style.display = 'none';
         isInvoiceFormOpen = true;
         initializeCreateView();
     } else {
@@ -54,7 +51,6 @@ function toggleInvoiceView(view, skipChangeCheck = false) {
         }
         listView.style.display = 'block';
         createView.style.display = 'none';
-        if (searchBox) searchBox.style.display = 'flex';
         isInvoiceFormOpen = false;
         resetInvoiceChanges();
     }
@@ -73,9 +69,6 @@ function initializeCreateView() {
         createdAt: null,
         invoiceNumber: null
     };
-    
-    // Clear selected visits
-    selectedVisits.clear();
     
     // Clear form
     const form = document.getElementById('invoiceForm');
@@ -96,8 +89,9 @@ function initializeCreateView() {
     const statusSelect = document.getElementById('invoiceStatus');
     if (statusSelect) statusSelect.value = 'draft';
     
-    // Load clients
+    // Load clients and add first item
     loadClientDropdown();
+    addInvoiceItem();
     
     // Reset totals and change tracking
     updateTotals();
@@ -352,122 +346,45 @@ async function loadClientDropdown() {
     }
 }
 
-// Create a row for a visit
-function createVisitRow(visit, visitId, rowIndex) {
-    // Handle cases where visit might be a line item from an invoice
-    // or a full visit document
-    let completedDate = '';
-    let services = '';
-    let timeToComplete = visit.quantity || visit.timeToComplete || 0;
-    let description = visit.description || '';
-
-    if (visit.completedDateTime) {
-        completedDate = new Date(visit.completedDateTime).toLocaleDateString();
-    }
-
-    if (visit.services && Array.isArray(visit.services)) {
-        services = visit.services.map(s => s.name).join(', ');
-    }
-
-    // If we have a description from the invoice item, use that
-    // Otherwise, construct it from visit data
-    if (!description && completedDate) {
-        description = `Services on ${completedDate}${services ? ': ' + services : ''}`;
-    }
-    
-    const row = document.createElement('tr');
-    row.setAttribute('data-visit-id', visitId);
-    row.innerHTML = `
-        <td>
-            <input type="number" 
-                   min="1" 
-                   value="${timeToComplete}" 
-                   onchange="updateLineTotal(${rowIndex})" 
-                   class="quantity-input"
-                   title="Time in minutes">
-        </td>
-        <td>
-            <input type="text" 
-                   value="${description}" 
-                   class="description-input"
-                   required>
-        </td>
-        <td>
-            <input type="number" 
-                   min="0" 
-                   step="0.01" 
-                   value="${visit.unitPrice || 40}" 
-                   onchange="updateLineTotal(${rowIndex})" 
-                   class="unit-price"
-                   title="Hourly rate">
-        </td>
-        <td class="line-total read-only">$${((timeToComplete / 60) * (visit.unitPrice || 40)).toFixed(2)}</td>
-        <td>
-            <button type="button" class="delete-row">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    `;
-    
-    // Add click handler to delete button
-    const deleteButton = row.querySelector('.delete-row');
-    deleteButton.addEventListener('click', () => removeVisitFromInvoice(rowIndex, visitId));
-    
-    return row;
-}
-
-// Create a row for a regular item
-function createItemRow(item = {}, rowIndex) {
-    const row = document.createElement('tr');
-    const quantity = item.quantity || '';
-    const description = item.description || '';
-    const unitPrice = item.unitPrice || '';
-    const lineTotal = item.lineTotal || (quantity && unitPrice ? quantity * unitPrice : 0);
-
-    row.innerHTML = `
-        <td>
-            <input type="number" 
-                   min="1" 
-                   value="${quantity}" 
-                   onchange="updateLineTotal(${rowIndex})" 
-                   class="quantity-input"
-                   title="Quantity">
-        </td>
-        <td>
-            <input type="text" 
-                   value="${description}" 
-                   class="description-input"
-                   required>
-        </td>
-        <td>
-            <input type="number" 
-                   min="0" 
-                   step="0.01" 
-                   value="${unitPrice}" 
-                   onchange="updateLineTotal(${rowIndex})" 
-                   class="unit-price"
-                   title="Unit price">
-        </td>
-        <td class="line-total read-only">$${lineTotal.toFixed(2)}</td>
-        <td>
-            <button type="button" class="delete-row">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    `;
-    
-    // Add click handler to delete button
-    const deleteButton = row.querySelector('.delete-row');
-    deleteButton.addEventListener('click', () => deleteInvoiceItem(rowIndex));
-    
-    return row;
-}
-
 // Add new invoice item row
 function addInvoiceItem() {
     const tbody = document.getElementById('invoiceItemsBody');
     const rowIndex = tbody.children.length;
-    const row = createItemRow({}, rowIndex);
+    
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>
+            <input type="number" 
+                   min="1" 
+                   value="1" 
+                   onchange="updateLineTotal(${rowIndex}); trackInvoiceChanges();" 
+                   class="quantity-input">
+        </td>
+        <td>
+            <input type="text" 
+                   placeholder="Item description" 
+                   class="description-input"
+                   onchange="trackInvoiceChanges();" 
+                   required>
+        </td>
+        <td>
+            <input type="number" 
+                   min="0" 
+                   step="0.01" 
+                   placeholder="0.00" 
+                   onchange="updateLineTotal(${rowIndex}); trackInvoiceChanges();" 
+                   class="unit-price">
+        </td>
+        <td class="line-total read-only">$0.00</td>
+        <td>
+            <button type="button" 
+                    onclick="deleteInvoiceItem(${rowIndex}); trackInvoiceChanges();" 
+                    class="delete-row">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
     tbody.appendChild(row);
     updateTotals();
     trackInvoiceChanges();
@@ -478,21 +395,9 @@ function updateLineTotal(rowIndex) {
     const tbody = document.getElementById('invoiceItemsBody');
     const row = tbody.children[rowIndex];
     
-    // Check if this is a time-based visit row
-    const isTimeBasedVisit = row.hasAttribute('data-visit-id') && 
-                            row.querySelector('.description-input').value.toLowerCase().includes('services on');
-    
     const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
     const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
-    let lineTotal;
-    
-    if (isTimeBasedVisit) {
-        // For time-based visits: (minutes / 60) * hourly rate
-        lineTotal = (quantity / 60) * unitPrice;
-    } else {
-        // For regular items: quantity * unit price
-        lineTotal = quantity * unitPrice;
-    }
+    const lineTotal = quantity * unitPrice;
     
     row.querySelector('.line-total').textContent = `$${lineTotal.toFixed(2)}`;
     updateTotals();
@@ -613,6 +518,7 @@ function initializeInvoiceSection() {
     // Initial load
     loadInvoices();
     loadClientDropdown();
+    addInvoiceItem(); // Add first row
 }
 
 // Save invoice
@@ -673,15 +579,13 @@ async function saveInvoiceDraft(e) {
             const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
             const description = row.querySelector('.description-input').value || '';
             const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
-            const lineTotal = parseFloat(row.querySelector('.line-total').textContent.replace('$', '')) || 0;
-            const visitId = row.getAttribute('data-visit-id') || null;
+            const lineTotal = quantity * unitPrice;
             
             console.log('saveInvoiceDraft: Processing row', index + 1, {
                 quantity,
                 description,
                 unitPrice,
-                lineTotal,
-                visitId
+                lineTotal
             });
             
             // Only add items that have either a description or a price
@@ -690,8 +594,7 @@ async function saveInvoiceDraft(e) {
                     quantity,
                     description,
                     unitPrice,
-                    lineTotal,
-                    visitId
+                    lineTotal
                 });
             }
         });
@@ -757,18 +660,6 @@ async function saveInvoiceDraft(e) {
             console.log('saveInvoiceDraft: Attempting to save new invoice to Firebase');
             const docRef = await db.collection('invoices').add(invoiceData);
             console.log('saveInvoiceDraft: Successfully created new invoice with ID:', docRef.id);
-
-            // Update all visits with the final invoice ID
-            const visitPromises = Array.from(tbody.children)
-                .filter(row => row.hasAttribute('data-visit-id'))
-                .map(row => {
-                    const visitId = row.getAttribute('data-visit-id');
-                    return db.collection('visits').doc(visitId).update({
-                        'invoicedOn.id': docRef.id
-                    });
-                });
-            
-            await Promise.all(visitPromises);
         } else {
             console.log('saveInvoiceDraft: Updating existing invoice:', currentInvoice.id);
             // Update existing invoice
@@ -792,9 +683,6 @@ async function saveInvoiceDraft(e) {
             createdAt: null,
             invoiceNumber: null
         };
-        
-        // Clear selected visits
-        selectedVisits.clear();
         
         console.log('saveInvoiceDraft: Reset current invoice state');
         
@@ -1096,7 +984,7 @@ async function showPrintPreview() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Qty/Time</th>
+                                <th>Quantity</th>
                                 <th>Description</th>
                                 <th>Unit Price</th>
                                 <th>Line Total</th>
@@ -1108,7 +996,7 @@ async function showPrintPreview() {
                                     <td>${item.quantity}</td>
                                     <td>${item.description}</td>
                                     <td>$${item.unitPrice.toFixed(2)}</td>
-                                    <td>$${item.lineTotal.toFixed(2)}</td>
+                                    <td>$${(item.quantity * item.unitPrice).toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -1213,47 +1101,13 @@ function showSection(sectionName) {
 
 // Delete invoice
 async function deleteInvoice(id) {
-    if (!confirm('Are you sure you want to delete this invoice? All associated visits will be marked as unbilled.')) {
+    if (!confirm('Are you sure you want to delete this invoice?')) {
         return;
     }
 
     try {
-        // First get the invoice to find associated visits
-        const invoiceDoc = await db.collection('invoices').doc(id).get();
-        if (!invoiceDoc.exists) {
-            console.error('Invoice not found');
-            return;
-        }
-
-        const invoice = invoiceDoc.data();
-        const visitIds = invoice.items
-            .filter(item => item.visitId)
-            .map(item => item.visitId);
-
-        console.log('Found visit IDs to update:', visitIds);
-
-        // Update all associated visits
-        const visitUpdates = visitIds.map(visitId => 
-            db.collection('visits').doc(visitId).update({
-                billingStatus: 'UNBILLED',
-                invoicedOn: firebase.firestore.FieldValue.delete(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            })
-        );
-
-        // Wait for all visit updates to complete
-        await Promise.all(visitUpdates);
-        console.log('Updated all associated visits');
-
-        // Delete the invoice
         await db.collection('invoices').doc(id).delete();
-        console.log('Deleted invoice:', id);
-
-        // Show success message
-        showSuccessMessage('Invoice deleted and visits updated');
-
-        // Refresh the list
-        loadInvoices();
+        loadInvoices(); // Refresh the list
     } catch (error) {
         console.error('Error deleting invoice:', error);
         alert('Error deleting invoice: ' + error.message);
@@ -1318,25 +1172,41 @@ async function editInvoice(id) {
         const tbody = document.getElementById('invoiceItemsBody');
         tbody.innerHTML = '';
         
-        // Clear selected visits
-        selectedVisits.clear();
-        
         // Add each item
-        invoice.items.forEach((item, index) => {
-            let row;
-            if (item.visitId) {
-                // For visit-based items
-                row = createVisitRow(item, item.visitId, index);
-                selectedVisits.add(item.visitId);
-            } else {
-                // For regular items
-                row = createItemRow({
-                    quantity: item.quantity,
-                    description: item.description,
-                    unitPrice: item.unitPrice,
-                    lineTotal: item.lineTotal
-                }, index);
-            }
+        invoice.items.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <input type="number" 
+                           min="1" 
+                           value="${item.quantity}" 
+                           onchange="updateLineTotal(${tbody.children.length}); trackInvoiceChanges();" 
+                           class="quantity-input">
+                </td>
+                <td>
+                    <input type="text" 
+                           value="${item.description}" 
+                           class="description-input"
+                           onchange="trackInvoiceChanges();" 
+                           required>
+                </td>
+                <td>
+                    <input type="number" 
+                           min="0" 
+                           step="0.01" 
+                           value="${item.unitPrice}" 
+                           onchange="updateLineTotal(${tbody.children.length}); trackInvoiceChanges();" 
+                           class="unit-price">
+                </td>
+                <td class="line-total read-only">$${item.lineTotal.toFixed(2)}</td>
+                <td>
+                    <button type="button" 
+                            onclick="deleteInvoiceItem(${tbody.children.length}); trackInvoiceChanges();" 
+                            class="delete-row">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
             tbody.appendChild(row);
         });
         
@@ -1491,7 +1361,7 @@ async function printInvoice(id) {
                     <table>
                         <thead>
                             <tr>
-                                <th>Qty/Time</th>
+                                <th>Quantity</th>
                                 <th>Description</th>
                                 <th>Unit Price</th>
                                 <th>Line Total</th>
@@ -1503,7 +1373,7 @@ async function printInvoice(id) {
                                     <td>${item.quantity}</td>
                                     <td>${item.description}</td>
                                     <td>$${item.unitPrice.toFixed(2)}</td>
-                                    <td>$${item.lineTotal.toFixed(2)}</td>
+                                    <td>$${(item.quantity * item.unitPrice).toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -1567,195 +1437,6 @@ function handleInvoiceNavigation() {
     } else {
         showSection('invoices');
     }
-}
-
-// Visit Selection Modal Functions
-async function showVisitSelectionModal() {
-    const modal = document.getElementById('visitSelectionModal');
-    const list = document.getElementById('visitSelectionList');
-    const clientId = document.getElementById('invoiceClient').value;
-
-    if (!clientId) {
-        alert('Please select a client first');
-        return;
-    }
-
-    try {
-        // Get completed visits for the selected client that haven't been billed
-        const visitsSnapshot = await db.collection('visits')
-            .where('clientId', '==', clientId)
-            .where('status', '==', 'COMPLETED')
-            .where('billingStatus', '!=', 'BILLED')
-            .orderBy('billingStatus')
-            .orderBy('completedDateTime', 'desc')
-            .get();
-
-        if (visitsSnapshot.empty) {
-            list.innerHTML = '<p class="no-data">No completed visits found for this client</p>';
-        } else {
-            list.innerHTML = visitsSnapshot.docs.map(doc => {
-                const visit = doc.data();
-                const completedDate = new Date(visit.completedDateTime).toLocaleDateString();
-                const services = visit.services.map(s => s.name).join(', ');
-                const isSelected = selectedVisits.has(doc.id);
-                
-                return `
-                    <div class="visit-selection-item ${isSelected ? 'selected' : ''}" 
-                         onclick="selectVisit('${doc.id}')"
-                         data-visit-id="${doc.id}">
-                        <div class="visit-date">
-                            <i class="fas fa-calendar-check"></i>
-                            Completed on ${completedDate}
-                        </div>
-                        <div class="visit-duration">
-                            <i class="fas fa-clock"></i>
-                            ${visit.timeToComplete} minutes
-                        </div>
-                        <div class="visit-services">
-                            ${visit.services.map(service => 
-                                `<span class="service-tag">${service.name}</span>`
-                            ).join('')}
-                        </div>
-                        <div class="billing-status ${visit.billingStatus?.toLowerCase() || 'unbilled'}">
-                            <i class="fas fa-file-invoice-dollar"></i>
-                            ${visit.billingStatus || 'UNBILLED'}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        modal.style.display = 'block';
-        setTimeout(() => modal.classList.add('show'), 10);
-    } catch (error) {
-        console.error('Error loading completed visits:', error);
-        alert('Error loading visits: ' + error.message);
-    }
-}
-
-function closeVisitSelectionModal() {
-    const modal = document.getElementById('visitSelectionModal');
-    modal.classList.remove('show');
-    setTimeout(() => modal.style.display = 'none', 300);
-}
-
-async function selectVisit(visitId) {
-    try {
-        const visitDoc = await db.collection('visits').doc(visitId).get();
-        if (!visitDoc.exists) {
-            alert('Visit not found');
-            return;
-        }
-
-        const visit = visitDoc.data();
-        const tbody = document.getElementById('invoiceItemsBody');
-        const rowIndex = tbody.children.length;
-        
-        // Create and add the row
-        const row = createVisitRow(visit, visitId, rowIndex);
-        tbody.appendChild(row);
-        updateTotals();
-        trackInvoiceChanges();
-
-        // Get current invoice information
-        const invoiceNumber = currentInvoice.invoiceNumber || await generateInvoiceNumber();
-        const invoiceId = currentInvoice.id || 'pending';
-
-        // Mark visit as billed and store invoice reference in the database
-        await db.collection('visits').doc(visitId).update({
-            billingStatus: 'BILLED',
-            invoicedOn: {
-                id: invoiceId,
-                number: invoiceNumber,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            },
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        // Add to selected visits set
-        selectedVisits.add(visitId);
-
-        // Close the modal
-        closeVisitSelectionModal();
-        
-        // Show success message
-        showSuccessMessage('Visit added to invoice');
-    } catch (error) {
-        console.error('Error selecting visit:', error);
-        alert('Error adding visit: ' + error.message);
-    }
-}
-
-async function removeVisitFromInvoice(rowIndex, visitId) {
-    try {
-        // Remove the row from the invoice
-        const tbody = document.getElementById('invoiceItemsBody');
-        tbody.deleteRow(rowIndex);
-        updateTotals();
-        trackInvoiceChanges();
-
-        // Update the visit's billing status and remove invoice reference
-        await db.collection('visits').doc(visitId).update({
-            billingStatus: 'UNBILLED',
-            invoicedOn: firebase.firestore.FieldValue.delete(), // Remove the invoice reference
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        // Remove from selected visits set
-        selectedVisits.delete(visitId);
-
-        // Show success message
-        showSuccessMessage('Visit removed from invoice');
-    } catch (error) {
-        console.error('Error removing visit:', error);
-        alert('Error removing visit: ' + error.message);
-    }
-}
-
-// Show success message
-function showSuccessMessage(message) {
-    // Create success message element
-    const successMessage = document.createElement('div');
-    successMessage.className = 'success-message';
-    successMessage.innerHTML = `
-        <i class="fas fa-check-circle"></i>
-        <span>${message}</span>
-    `;
-    
-    // Style the message
-    successMessage.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background-color: #4caf50;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        z-index: 9999;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        opacity: 0;
-        transform: translateY(-10px);
-        transition: opacity 0.3s ease, transform 0.3s ease;
-    `;
-    
-    // Add to document
-    document.body.appendChild(successMessage);
-    
-    // Trigger animation
-    setTimeout(() => {
-        successMessage.style.opacity = '1';
-        successMessage.style.transform = 'translateY(0)';
-    }, 10);
-    
-    // Remove after delay
-    setTimeout(() => {
-        successMessage.style.opacity = '0';
-        successMessage.style.transform = 'translateY(-10px)';
-        setTimeout(() => successMessage.remove(), 300);
-    }, 3000);
 }
 
 // Initialize when the page loads
