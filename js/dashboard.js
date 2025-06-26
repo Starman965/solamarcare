@@ -204,7 +204,6 @@ function updateDashboardUI() {
             { id: 'activeClientsCount', value: dashboardData.activeClients },
             { id: 'totalRevenueAmount', value: formatCurrency(dashboardData.totalRevenue) },
             { id: 'revenueCollectedAmount', value: formatCurrency(dashboardData.revenueCollected) },
-            { id: 'revenueBilledAmount', value: formatCurrency(dashboardData.revenueBilled) },
             { id: 'revenueDueAmount', value: formatCurrency(dashboardData.revenueDue) },
             { id: 'revenuePastDueAmount', value: formatCurrency(dashboardData.revenuePastDue) },
             { id: 'revenueDraftAmount', value: formatCurrency(dashboardData.revenueDraft) }

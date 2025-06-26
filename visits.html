@@ -20,6 +20,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/visits.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -52,9 +53,25 @@
                     </button>
                 </div>
             </div>
+            
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">
+                    <i class="fas fa-list"></i> All
+                </button>
+                <button class="filter-tab" data-filter="SCHEDULED">
+                    <i class="fas fa-calendar"></i> Scheduled
+                </button>
+                <button class="filter-tab" data-filter="IN_PROGRESS">
+                    <i class="fas fa-play"></i> In Progress
+                </button>
+                <button class="filter-tab" data-filter="COMPLETED">
+                    <i class="fas fa-check"></i> Completed
+                </button>
+            </div>
 
             <!-- Visits List -->
-            <div id="visitsList" class="data-list">
+            <div id="visitsList" class="visit-list">
                 <!-- Visits will be loaded here -->
             </div>
 
@@ -68,15 +85,199 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <!-- Visit form will go here -->
+                        <form id="visitForm" class="visit-form">
+                            <div class="form-sidebar">
+                                <div class="tab-list">
+                                    <button type="button" class="tab-item active" data-tab="details">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span>Details</span>
+                                    </button>
+                                    <button type="button" class="tab-item" data-tab="services">
+                                        <i class="fas fa-concierge-bell"></i>
+                                        <span>Services</span>
+                                    </button>
+                                    <button type="button" class="tab-item" data-tab="notes">
+                                        <i class="fas fa-sticky-note"></i>
+                                        <span>Notes</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-content">
+                                <div class="tab-panel active" id="detailsTab">
+                                    <div class="form-section">
+                                        <h3>Visit Details</h3>
+                                        <div class="form-group">
+                                            <label for="visitClient">
+                                                <i class="fas fa-user"></i>
+                                                Client
+                                            </label>
+                                            <select id="visitClient" required>
+                                                <option value="">Select a client...</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Scheduled Date and Time -->
+                                        <div class="form-group-row">
+                                            <div class="form-group">
+                                                <label for="scheduledDate">
+                                                    <i class="fas fa-calendar"></i>
+                                                    Date Scheduled
+                                                </label>
+                                                <input type="date" id="scheduledDate" required>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="scheduledTime">
+                                                    <i class="fas fa-clock"></i>
+                                                    Time Scheduled
+                                                </label>
+                                                <input type="time" id="scheduledTime" required>
+                                            </div>
+                                        </div>
+
+                                        <!-- Completed Date and Time -->
+                                        <div class="form-group-row">
+                                            <div class="form-group">
+                                                <label for="completedDate">
+                                                    <i class="fas fa-calendar-check"></i>
+                                                    Date Completed
+                                                </label>
+                                                <input type="date" id="completedDate">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="completedTime">
+                                                    <i class="fas fa-clock"></i>
+                                                    Time Completed
+                                                </label>
+                                                <input type="time" id="completedTime">
+                                            </div>
+                                        </div>
+
+                                        <!-- Time to Complete -->
+                                        <div class="form-group">
+                                            <label for="timeToComplete">
+                                                <i class="fas fa-hourglass-end"></i>
+                                                Time to Complete (minutes)
+                                            </label>
+                                            <input type="number" 
+                                                   id="timeToComplete" 
+                                                   min="0" 
+                                                   step="1" 
+                                                   placeholder="Enter time in minutes">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-panel" id="servicesTab">
+                                    <div class="form-section">
+                                        <h3>Visit Services</h3>
+                                        <div class="form-group">
+                                            <div class="service-selector">
+                                                <select id="serviceSelector">
+                                                    <option value="">Select a service...</option>
+                                                </select>
+                                                <button type="button" class="button secondary" onclick="addSelectedService()">
+                                                    <i class="fas fa-plus"></i>
+                                                    Add Service
+                                                </button>
+                                            </div>
+                                            <div id="selectedServices" class="selected-services-list">
+                                                <!-- Selected services will be added here -->
+                                            </div>
+                                            <div class="estimated-time">
+                                                <i class="fas fa-clock"></i>
+                                                Estimated Time: <span id="estimatedTime">0</span> minutes
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-panel" id="notesTab">
+                                    <div class="form-section">
+                                        <h3>Visit Notes</h3>
+                                        <div class="form-group">
+                                            <label for="visitNotes">
+                                                <i class="fas fa-pen"></i>
+                                                Notes
+                                            </label>
+                                            <textarea id="visitNotes" rows="6" 
+                                                placeholder="Add any notes or special instructions for this visit..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                     <div class="modal-footer">
-                        <button onclick="closeVisitModal()" class="button secondary">Cancel</button>
-                        <button onclick="saveVisit()" class="button primary">Save Visit</button>
+                        <div class="modal-footer-left">
+                            <button onclick="confirmDeleteVisit()" class="button danger" id="deleteVisitButton" style="display: none;">
+                                <i class="fas fa-trash"></i> Delete Visit
+                            </button>
+                        </div>
+                        <div class="modal-footer-right">
+                            <button onclick="closeVisitModal()" class="button secondary">Cancel</button>
+                            <button onclick="saveVisit()" class="button primary">Save Visit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div id="deleteConfirmModal" class="modal" style="display: none;">
+                <div class="modal-content delete-modal">
+                    <div class="modal-header">
+                        <h3>Delete Visit</h3>
+                        <button onclick="closeDeleteConfirmModal()" class="close-button" title="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="warning-message">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>Are you sure you want to delete this visit? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button onclick="closeDeleteConfirmModal()" class="button secondary">Cancel</button>
+                        <button onclick="deleteVisit()" class="button danger">Delete</button>
                     </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Status Selection Modal -->
+    <div id="statusModal" class="modal" style="display: none;">
+        <div class="modal-content status-modal">
+            <div class="modal-header">
+                <h3>Update Visit Status</h3>
+                <button onclick="closeStatusModal()" class="close-button" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="status-options">
+                    <button class="status-option scheduled" onclick="updateVisitStatus(currentStatusVisitId, 'SCHEDULED')">
+                        <i class="fas fa-calendar"></i>
+                        Scheduled
+                    </button>
+                    <button class="status-option in-progress" onclick="updateVisitStatus(currentStatusVisitId, 'IN_PROGRESS')">
+                        <i class="fas fa-play"></i>
+                        In Progress
+                    </button>
+                    <button class="status-option completed" onclick="updateVisitStatus(currentStatusVisitId, 'COMPLETED')">
+                        <i class="fas fa-check"></i>
+                        Completed
+                    </button>
+                    <button class="status-option cancelled" onclick="updateVisitStatus(currentStatusVisitId, 'CANCELLED')">
+                        <i class="fas fa-ban"></i>
+                        Cancelled
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase Scripts -->
@@ -87,5 +288,19 @@
     <!-- App Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/visits.js"></script>
+    <script>
+        // Initialize the visits page when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is authenticated
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    initializeVisitsPage();
+                } else {
+                    window.location.href = 'login.html';
+                }
+            });
+        });
+    </script>
 </body>
 </html> 

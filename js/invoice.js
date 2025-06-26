@@ -12,10 +12,9 @@ let currentInvoice = {
 };
 
 // Add state tracking at the top of the file
+let currentInvoices = [];
 let hasUnsavedChanges = false;
 let isInvoiceFormOpen = false;
-
-// Add current filter state at the top of the file with other state variables
 let currentFilter = 'all';
 
 // Track changes in the form
@@ -107,20 +106,85 @@ function filterInvoices(filter) {
         button.classList.toggle('active', button.dataset.filter === filter);
     });
     
-    // Update current filter and reload invoices
+    // Update current filter and apply filters
     currentFilter = filter;
-    loadInvoices();
+    applyFiltersAndSearch();
+}
+
+// Apply both filters and search
+function applyFiltersAndSearch() {
+    console.log('Applying filters and search...');
+    const tableBody = document.getElementById('invoiceTableBody');
+    const emptyState = document.getElementById('emptyInvoiceState');
+    const emptyStateTitle = document.getElementById('emptyStateTitle');
+    const emptyStateMessage = document.getElementById('emptyStateMessage');
+    const searchTerm = document.getElementById('invoiceSearch').value.toLowerCase();
+    
+    console.log('Current filter:', currentFilter);
+    console.log('Search term:', searchTerm);
+    console.log('Total invoices in memory:', currentInvoices.length);
+    
+    if (!tableBody || !emptyState || !emptyStateTitle || !emptyStateMessage) {
+        console.error('Required invoice elements not found');
+        return;
+    }
+
+    // Clear current list
+    tableBody.innerHTML = '';
+    emptyState.style.display = 'none';
+
+    // Filter the in-memory invoices
+    const filteredInvoices = currentInvoices.filter(invoice => {
+        const matchesSearch = 
+            (invoice.clientName || '').toLowerCase().includes(searchTerm) ||
+            (invoice.invoiceNumber || '').toLowerCase().includes(searchTerm) ||
+            (invoice.status || '').toLowerCase().includes(searchTerm) ||
+            (invoice.clientAddress?.street || '').toLowerCase().includes(searchTerm) ||
+            (invoice.clientAddress?.city || '').toLowerCase().includes(searchTerm) ||
+            (invoice.clientAddress?.state || '').toLowerCase().includes(searchTerm) ||
+            (invoice.clientAddress?.zip || '').toLowerCase().includes(searchTerm);
+            
+        const matchesFilter = currentFilter === 'all' || invoice.status === currentFilter;
+        
+        return matchesSearch && matchesFilter;
+    });
+
+    console.log('Filtered invoices:', filteredInvoices.length);
+
+    // Show empty state if no results
+    if (filteredInvoices.length === 0) {
+        console.log('No results found, showing empty state');
+        emptyState.style.display = 'block';
+        if (searchTerm) {
+            emptyStateTitle.textContent = 'No Matching Invoices';
+            emptyStateMessage.textContent = 'Try adjusting your search or filter criteria.';
+        } else if (currentFilter !== 'all') {
+            const filterText = currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1);
+            emptyStateTitle.textContent = `No ${filterText} Invoices`;
+            emptyStateMessage.textContent = `There are no invoices with ${filterText} status.`;
+        } else {
+            emptyStateTitle.textContent = 'No Invoices Yet';
+            emptyStateMessage.textContent = 'Create your first invoice by clicking the "Create Invoice" button above.';
+        }
+        return;
+    }
+
+    // Display filtered results
+    console.log('Displaying filtered results');
+    filteredInvoices.forEach(invoice => {
+        const row = createInvoiceRow(invoice.id, invoice);
+        if (row) tableBody.appendChild(row);
+    });
 }
 
 // Load and display invoices
 async function loadInvoices() {
+    console.log('Loading invoices...');
     const tableBody = document.getElementById('invoiceTableBody');
     const emptyState = document.getElementById('emptyInvoiceState');
     const errorState = document.getElementById('errorInvoiceState');
-    const emptyStateTitle = document.getElementById('emptyStateTitle');
-    const emptyStateMessage = document.getElementById('emptyStateMessage');
     
-    if (!tableBody || !emptyState || !errorState || !emptyStateTitle || !emptyStateMessage) {
+    if (!tableBody || !emptyState || !errorState) {
         console.error('Required invoice elements not found');
         return;
     }
@@ -131,51 +195,29 @@ async function loadInvoices() {
         emptyState.style.display = 'none';
         errorState.style.display = 'none';
 
-        // First check if there are any invoices at all
-        const totalCount = await db.collection('invoices').get();
-        const hasAnyInvoices = !totalCount.empty;
+        // Load all invoices into memory
+        console.log('Fetching invoices from database...');
+        const snapshot = await db.collection('invoices')
+            .orderBy('createdAt', 'desc')
+            .get();
 
-        // Create base query
-        let query = db.collection('invoices');
+        console.log('Processing', snapshot.size, 'invoices');
         
-        // Apply filter if not 'all'
-        if (currentFilter !== 'all') {
-            query = query.where('status', '==', currentFilter);
-        }
+        // Store in memory
+        currentInvoices = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
         
-        // Add sorting
-        query = query.orderBy('createdAt', 'desc');
+        console.log('Stored invoices in memory:', currentInvoices.length);
 
-        // Execute query
-        const invoicesSnapshot = await query.get();
-
-        // Show empty state if no invoices
-        if (invoicesSnapshot.empty) {
-            emptyState.style.display = 'block';
-            
-            if (!hasAnyInvoices) {
-                // Case 1: No invoices exist at all
-                emptyStateTitle.textContent = 'No Invoices Yet';
-                emptyStateMessage.textContent = 'Create your first invoice by clicking the "Create Invoice" button above.';
-            } else {
-                // Case 2: No invoices match the current filter
-                const filterText = currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1);
-                emptyStateTitle.textContent = `No ${filterText} Invoices`;
-                emptyStateMessage.textContent = `There are no invoices with ${filterText} status.`;
-            }
-            return;
-        }
-
-        // Process each invoice
-        for (const doc of invoicesSnapshot.docs) {
-            const invoice = doc.data();
-            const row = createInvoiceRow(doc.id, invoice);
-            if (row) tableBody.appendChild(row);
-        }
+        // Apply current filters
+        applyFiltersAndSearch();
 
     } catch (error) {
         console.error('Error loading invoices:', error);
         errorState.style.display = 'block';
+        currentInvoices = []; // Reset the array on error
     }
 }
 
@@ -467,6 +509,14 @@ function initializeInvoiceSection() {
         };
     }
     
+    // Set up search handler
+    const searchInput = document.getElementById('invoiceSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFiltersAndSearch);
+    }
+    
+    // Initial load
+    loadInvoices();
     loadClientDropdown();
     addInvoiceItem(); // Add first row
 }
@@ -1387,4 +1437,9 @@ function handleInvoiceNavigation() {
     } else {
         showSection('invoices');
     }
-} 
+}
+
+// Initialize when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    initializeInvoiceSection();
+}); 
