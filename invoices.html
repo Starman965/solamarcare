@@ -145,7 +145,7 @@
                         <table class="invoice-table">
                             <thead>
                                 <tr>
-                                    <th>Quantity</th>
+                                    <th>Qty/Time</th>
                                     <th>Description</th>
                                     <th>Unit Price</th>
                                     <th style="text-align: right">Line Total</th>
@@ -156,9 +156,14 @@
                                 <!-- Items will be added here dynamically -->
                             </tbody>
                         </table>
-                        <button type="button" onclick="addInvoiceItem()" class="button secondary">
-                            <i class="fas fa-plus"></i> Add Item
-                        </button>
+                        <div class="invoice-item-actions">
+                            <button type="button" onclick="addInvoiceItem()" class="button secondary">
+                                <i class="fas fa-plus"></i> Add Item
+                            </button>
+                            <button type="button" onclick="showVisitSelectionModal()" class="button secondary">
+                                <i class="fas fa-calendar-check"></i> Add Visit
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Invoice Totals -->
@@ -188,6 +193,23 @@
                 </form>
             </div>
         </main>
+    </div>
+
+    <!-- Visit Selection Modal -->
+    <div id="visitSelectionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Select Completed Visit</h3>
+                <button onclick="closeVisitSelectionModal()" class="close-button" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="visit-selection-list" id="visitSelectionList">
+                    <!-- Completed visits will be loaded here -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase Scripts -->

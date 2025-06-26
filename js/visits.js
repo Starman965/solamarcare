@@ -39,6 +39,12 @@ const VISIT_STATUS = {
     CANCELLED: 'CANCELLED'
 };
 
+// Visit Billing Status
+const VISIT_BILLING_STATUS = {
+    BILLED: 'BILLED',
+    UNBILLED: 'UNBILLED'
+};
+
 // Initialize Visits Page
 async function initializeVisitsPage() {
     try {
@@ -121,16 +127,18 @@ function updateVisitsList() {
         return;
     }
 
-    const visitCards = currentVisits.map(visit => {
-        console.log('Creating card for visit:', visit);
-        return createVisitCard(visit);
+    // Clear existing content
+    container.innerHTML = '';
+    
+    // Create and append visit cards
+    currentVisits.forEach(visit => {
+        const card = createVisitCard(visit);
+        container.appendChild(card);
     });
-    console.log('Generated visit cards:', visitCards);
-    container.innerHTML = visitCards.join('');
 }
 
+// Create Visit Card
 function createVisitCard(visit) {
-    console.log('Creating card with visit data:', visit);
     const client = visit.clientName || 'Unknown Client';
     const address = visit.clientAddress || 'No address available';
     
@@ -143,6 +151,7 @@ function createVisitCard(visit) {
     const scheduledDate = visit.scheduledDateTime ? formatDateTime(visit.scheduledDateTime) : 'No date set';
     const duration = visit.timeToComplete || visit.estimatedDuration || 0;
     const statusClass = visit.status ? visit.status.toLowerCase().replace('_', '-') : '';
+    const billingStatus = visit.billingStatus || VISIT_BILLING_STATUS.UNBILLED;
 
     // Format completed date/time if visit is completed
     let dateTimeInfo = '';
@@ -152,6 +161,7 @@ function createVisitCard(visit) {
             <div class="visit-completed">
                 <i class="fas fa-check-circle"></i>
                 Completed: ${completedDate}
+                ${billingStatus === VISIT_BILLING_STATUS.BILLED ? '<span class="billing-status billed"><i class="fas fa-file-invoice-dollar"></i> Billed</span>' : ''}
             </div>
         `;
     } else {
@@ -171,34 +181,40 @@ function createVisitCard(visit) {
         </div>
     ` : '';
 
-    const card = `
-        <div class="visit-card" onclick="editVisit('${visit.id}')" data-status="${visit.status || ''}">
-            <div class="visit-main-info">
-                <div class="visit-client">
-                    <h3>${client}</h3>
-                    <div class="client-address">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${address}</span>
-                    </div>
-                </div>
-                ${dateTimeInfo}
-                <div class="visit-duration">
-                    <i class="fas fa-clock"></i>
-                    ${duration} minutes
-                </div>
-                <div class="visit-status ${statusClass}" onclick="showStatusModal(event, '${visit.id}')">
-                    ${visit.status || 'Unknown'}
+    const card = document.createElement('div');
+    card.className = 'visit-card';
+    card.setAttribute('data-status', visit.status || '');
+    card.onclick = (e) => {
+        e.preventDefault();
+        editVisit(visit.id);
+    };
+
+    card.innerHTML = `
+        <div class="visit-main-info">
+            <div class="visit-client">
+                <h3>${client}</h3>
+                <div class="client-address">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>${address}</span>
                 </div>
             </div>
-            <div class="visit-services">
-                ${(visit.services || []).map(service => `
-                    <span class="service-tag">${service.name}</span>
-                `).join('')}
+            ${dateTimeInfo}
+            <div class="visit-duration">
+                <i class="fas fa-clock"></i>
+                ${duration} minutes
             </div>
-            ${notesSection}
+            <div class="visit-status ${statusClass}" onclick="event.stopPropagation(); showStatusModal(event, '${visit.id}')">
+                ${visit.status || 'Unknown'}
+            </div>
         </div>
+        <div class="visit-services">
+            ${(visit.services || []).map(service => `
+                <span class="service-tag">${service.name}</span>
+            `).join('')}
+        </div>
+        ${notesSection}
     `;
-    console.log('Generated card HTML:', card);
+
     return card;
 }
 
@@ -322,29 +338,60 @@ async function loadClientOptions() {
     }
 }
 
-// Load Services into Select
+// Load selected services into the services tab
+async function loadSelectedServices(services = []) {
+    try {
+        // First load all service options
+        await loadServiceOptions();
+        
+        // Get the container for selected services
+        const selectedServicesContainer = document.getElementById('selectedServices');
+        selectedServicesContainer.innerHTML = '';
+        
+        // Add each service
+        services.forEach(service => {
+            const serviceElement = document.createElement('div');
+            serviceElement.className = 'selected-service';
+            serviceElement.setAttribute('data-service-id', service.id);
+            serviceElement.setAttribute('data-service-name', service.name);
+            serviceElement.setAttribute('data-duration', service.defaultDuration);
+            
+            serviceElement.innerHTML = `
+                <span>${service.name} (${service.defaultDuration} min)</span>
+                <button type="button" onclick="removeSelectedService(this.parentElement)" class="remove-service">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            selectedServicesContainer.appendChild(serviceElement);
+        });
+        
+        // Update estimated time
+        updateEstimatedTime();
+    } catch (error) {
+        console.error('Error loading selected services:', error);
+        throw new Error('Failed to load selected services: ' + error.message);
+    }
+}
+
+// Load service options into the dropdown
 async function loadServiceOptions() {
     try {
+        const snapshot = await db.collection('services').get();
         const serviceSelect = document.getElementById('serviceSelector');
+        
         if (!serviceSelect) return;
-
-        // Clear existing options except the placeholder
+        
+        // Clear existing options except the first one
         while (serviceSelect.options.length > 1) {
             serviceSelect.remove(1);
         }
-
-        // Get all services first, then filter and sort in memory
-        const servicesSnapshot = await db.collection('services').get();
         
-        // Convert to array, filter active services, and sort by name
-        const activeServices = servicesSnapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(service => service.isActive)
-            .sort((a, b) => a.name.localeCompare(b.name));
-
-        activeServices.forEach(service => {
+        // Add new options
+        snapshot.forEach(doc => {
+            const service = doc.data();
             const option = document.createElement('option');
-            option.value = service.id;
+            option.value = doc.id;
             option.textContent = `${service.name} (${service.defaultDuration} min)`;
             option.setAttribute('data-name', service.name);
             option.setAttribute('data-duration', service.defaultDuration);
@@ -352,59 +399,29 @@ async function loadServiceOptions() {
         });
     } catch (error) {
         console.error('Error loading service options:', error);
-        showErrorMessage('Failed to load services: ' + error.message);
+        throw new Error('Failed to load service options: ' + error.message);
     }
 }
 
 // Update estimated time based on selected services
 function updateEstimatedTime() {
-    const selectedServices = document.querySelectorAll('#selectedServices .selected-service');
+    const selectedServices = document.querySelectorAll('.selected-service');
     const totalTime = Array.from(selectedServices).reduce((total, service) => {
-        return total + parseInt(service.dataset.duration || 0);
+        return total + parseInt(service.getAttribute('data-duration') || 0);
     }, 0);
     
-    document.getElementById('estimatedTime').textContent = totalTime;
+    const estimatedTimeElement = document.getElementById('estimatedTime');
+    if (estimatedTimeElement) {
+        estimatedTimeElement.textContent = `${totalTime} minutes`;
+    }
 }
 
-// Add Selected Service
-function addSelectedService() {
-    const serviceSelect = document.getElementById('serviceSelector');
-    const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
-    
-    if (!selectedOption || !selectedOption.value) {
-        showErrorMessage('Please select a service');
-        return;
+// Remove a selected service
+function removeSelectedService(serviceElement) {
+    if (serviceElement && serviceElement.parentNode) {
+        serviceElement.parentNode.removeChild(serviceElement);
+        updateEstimatedTime();
     }
-
-    const serviceId = selectedOption.value;
-    const serviceName = selectedOption.getAttribute('data-name');
-    const duration = selectedOption.getAttribute('data-duration');
-
-    // Check if service is already added
-    const existingService = document.querySelector(`.selected-service[data-service-id="${serviceId}"]`);
-    if (existingService) {
-        showErrorMessage('This service is already added');
-        return;
-    }
-
-    const serviceElement = document.createElement('div');
-    serviceElement.className = 'selected-service';
-    serviceElement.setAttribute('data-service-id', serviceId);
-    serviceElement.setAttribute('data-service-name', serviceName);
-    serviceElement.setAttribute('data-duration', duration);
-    
-    serviceElement.innerHTML = `
-        <span>${serviceName} (${duration} min)</span>
-        <button type="button" onclick="removeSelectedService(this.parentElement)" class="remove-service">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    document.getElementById('selectedServices').appendChild(serviceElement);
-    serviceSelect.selectedIndex = 0;
-    
-    // Update estimated time
-    updateEstimatedTime();
 }
 
 // Handle Tab Switching
@@ -428,8 +445,22 @@ function switchTab(event) {
 
 // Initialize Tab Event Listeners
 function initializeTabListeners() {
-    document.querySelectorAll('.tab-item').forEach(button => {
-        button.addEventListener('click', switchTab);
+    const tabButtons = document.querySelectorAll('.tab-item');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetTab = button.getAttribute('data-tab');
+            
+            // Update active states
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanels.forEach(panel => panel.classList.remove('active'));
+            
+            // Activate selected tab
+            button.classList.add('active');
+            document.getElementById(`${targetTab}Tab`).classList.add('active');
+        });
     });
 }
 
@@ -481,90 +512,32 @@ function closeVisitModal() {
     }, 300);
 }
 
-// Update editVisit to set initial estimated time
+// Edit visit function
 async function editVisit(visitId) {
     try {
-        const visit = currentVisits.find(v => v.id === visitId);
-        if (!visit) {
-            showErrorMessage('Visit not found');
-            return;
-        }
-
-        editingVisitId = visitId;
-        
-        // Load options first
-        await Promise.all([
-            loadClientOptions(),
-            loadServiceOptions()
-        ]);
-        
         // Update modal title
         document.getElementById('visitModalTitle').textContent = 'Edit Visit';
         
-        // Show delete button and set visit ID
+        // Show delete button
         const deleteButton = document.getElementById('deleteVisitButton');
         deleteButton.style.display = 'block';
         deleteButton.setAttribute('data-visit-id', visitId);
+        
+        // Load the visit data into the modal
+        await loadVisitIntoModal(visitId);
         
         // Show first tab
         document.querySelectorAll('.tab-item').forEach((btn, index) => {
             btn.classList.toggle('active', index === 0);
         });
-        document.querySelectorAll('.tab-panel').forEach((content, index) => {
-            content.classList.toggle('active', index === 0);
+        document.querySelectorAll('.tab-panel').forEach((panel, index) => {
+            panel.classList.toggle('active', index === 0);
         });
         
         // Initialize tab listeners
         initializeTabListeners();
         
-        // Populate form fields
-        document.getElementById('visitClient').value = visit.clientId;
-        
-        // Convert ISO date string to local date and time
-        const visitDate = new Date(visit.scheduledDateTime);
-        document.getElementById('scheduledDate').value = visitDate.toISOString().split('T')[0];
-        document.getElementById('scheduledTime').value = visitDate.toTimeString().slice(0, 5);
-        
-        // Set completed date and time if they exist
-        if (visit.completedDateTime) {
-            const completedDate = new Date(visit.completedDateTime);
-            document.getElementById('completedDate').value = completedDate.toISOString().split('T')[0];
-            document.getElementById('completedTime').value = completedDate.toTimeString().slice(0, 5);
-        }
-
-        // Set time to complete if it exists
-        if (visit.timeToComplete) {
-            document.getElementById('timeToComplete').value = visit.timeToComplete;
-        }
-        
-        // Clear and populate selected services
-        const selectedServicesContainer = document.getElementById('selectedServices');
-        selectedServicesContainer.innerHTML = '';
-        
-        visit.services.forEach(service => {
-            const serviceElement = document.createElement('div');
-            serviceElement.className = 'selected-service';
-            serviceElement.setAttribute('data-service-id', service.id);
-            serviceElement.setAttribute('data-service-name', service.name);
-            serviceElement.setAttribute('data-duration', service.defaultDuration);
-            
-            serviceElement.innerHTML = `
-                <span>${service.name} (${service.defaultDuration} min)</span>
-                <button type="button" onclick="removeSelectedService(this.parentElement)" class="remove-service">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            selectedServicesContainer.appendChild(serviceElement);
-        });
-        
-        // Update estimated time after populating services
-        updateEstimatedTime();
-        
-        // Set notes
-        document.getElementById('visitNotes').value = visit.notes || '';
-        
-        // Show modal
+        // Show modal with animation
         const modal = document.getElementById('visitModal');
         modal.style.display = 'block';
         setTimeout(() => modal.classList.add('show'), 10);
@@ -579,29 +552,50 @@ async function editVisit(visitId) {
 async function saveVisit() {
     try {
         const form = document.getElementById('visitForm');
-        if (!form.checkValidity()) {
-            form.reportValidity();
+        
+        // Check required fields and collect their labels
+        const requiredFields = [
+            { id: 'visitClient', label: 'Client' },
+            { id: 'dateScheduled', label: 'Date Scheduled' },
+            { id: 'timeScheduled', label: 'Time Scheduled' }
+        ];
+
+        const emptyFields = requiredFields.filter(field => {
+            const element = document.getElementById(field.id);
+            return !element.value;
+        });
+
+        if (emptyFields.length > 0) {
+            const fieldList = emptyFields.map(field => field.label).join(', ');
+            showErrorMessage(`Please fill in all required fields: ${fieldList}`);
             return;
         }
 
+        // Get form values
         const clientId = document.getElementById('visitClient').value;
-        const scheduledDate = document.getElementById('scheduledDate').value;
-        const scheduledTime = document.getElementById('scheduledTime').value;
-        const completedDate = document.getElementById('completedDate').value;
-        const completedTime = document.getElementById('completedTime').value;
+        const scheduledDate = document.getElementById('dateScheduled').value;
+        const scheduledTime = document.getElementById('timeScheduled').value;
+        const completedDate = document.getElementById('dateCompleted').value;
+        const completedTime = document.getElementById('timeCompleted').value;
         const timeToComplete = document.getElementById('timeToComplete').value;
         const notes = document.getElementById('visitNotes').value;
 
         // Get selected services
         const selectedServiceElements = document.querySelectorAll('#selectedServices .selected-service');
         const services = Array.from(selectedServiceElements).map(el => ({
-            id: el.dataset.serviceId,
-            name: el.dataset.serviceName,
-            defaultDuration: parseInt(el.dataset.duration)
+            id: el.getAttribute('data-service-id'),
+            name: el.getAttribute('data-service-name'),
+            defaultDuration: parseInt(el.getAttribute('data-duration'))
         }));
 
         if (services.length === 0) {
-            showErrorMessage('Please select at least one service');
+            showErrorMessage('Please select at least one service for the visit');
+            return;
+        }
+
+        // Validate completed date/time consistency
+        if ((completedDate && !completedTime) || (!completedDate && completedTime)) {
+            showErrorMessage('If entering completion details, both date and time must be provided');
             return;
         }
 
@@ -627,17 +621,27 @@ async function saveVisit() {
         // Add completed date/time and actual duration if provided
         if (completedDate && completedTime) {
             visitData.completedDateTime = new Date(`${completedDate}T${completedTime}`).toISOString();
+            // If the visit is being marked as completed, ensure it has a billing status
+            if (!editingVisitId || !currentVisits.find(v => v.id === editingVisitId)?.billingStatus) {
+                visitData.billingStatus = VISIT_BILLING_STATUS.UNBILLED;
+            }
         }
         if (timeToComplete) {
             visitData.timeToComplete = parseInt(timeToComplete);
         }
 
         if (editingVisitId) {
-            // For editing, don't include status in the update
+            // For editing, preserve existing status and billing status
+            const existingVisit = currentVisits.find(v => v.id === editingVisitId);
+            if (existingVisit) {
+                visitData.status = existingVisit.status;
+                visitData.billingStatus = existingVisit.billingStatus || VISIT_BILLING_STATUS.UNBILLED;
+            }
             await db.collection('visits').doc(editingVisitId).update(visitData);
         } else {
-            // For new visits, add the status
+            // For new visits, add the status and billing status
             visitData.status = VISIT_STATUS.SCHEDULED;
+            visitData.billingStatus = VISIT_BILLING_STATUS.UNBILLED;
             visitData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection('visits').add(visitData);
         }
@@ -649,15 +653,6 @@ async function saveVisit() {
     } catch (error) {
         console.error('Error saving visit:', error);
         showErrorMessage('Failed to save visit: ' + error.message);
-    }
-}
-
-// Remove Selected Service
-function removeSelectedService(element) {
-    if (element && element.parentNode) {
-        element.parentNode.removeChild(element);
-        // Update estimated time after removal
-        updateEstimatedTime();
     }
 }
 
@@ -730,4 +725,219 @@ async function deleteVisit() {
         console.error('Error deleting visit:', error);
         showErrorMessage('Failed to delete visit: ' + error.message);
     }
+}
+
+// Helper functions for date/time formatting
+function formatDateForInput(dateTimeStr) {
+    if (!dateTimeStr) return '';
+    const date = new Date(dateTimeStr);
+    return date.toISOString().split('T')[0];
+}
+
+function formatTimeForInput(dateTimeStr) {
+    if (!dateTimeStr) return '';
+    const date = new Date(dateTimeStr);
+    return date.toLocaleTimeString('en-US', { 
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Update billing status display
+function updateBillingStatusDisplay(visit) {
+    const billingStatusElement = document.querySelector('#detailsTab .billing-status');
+    if (!billingStatusElement) return;
+
+    const status = visit.billingStatus || 'UNBILLED';
+    
+    if (status === 'BILLED' && visit.invoicedOn) {
+        billingStatusElement.innerHTML = `
+            <div class="status-content">
+                <i class="fas fa-file-invoice-dollar"></i>
+                BILLED (Invoice #${visit.invoicedOn.number})
+            </div>
+            <button type="button" onclick="event.stopPropagation(); clearBillingStatus(event);" class="button small danger" title="Clear billing status">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        billingStatusElement.className = 'billing-status billed with-clear-button';
+    } else {
+        billingStatusElement.innerHTML = `
+            <i class="fas fa-clock"></i>
+            UNBILLED
+        `;
+        billingStatusElement.className = 'billing-status unbilled';
+    }
+}
+
+// Clear billing status
+async function clearBillingStatus(event) {
+    // Prevent event from bubbling up to modal
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    try {
+        if (!editingVisitId) {
+            showErrorMessage('No visit selected');
+            return;
+        }
+
+        // Show confirmation dialog
+        if (!confirm('Are you sure you want to clear the billing status? This should only be done if the invoice was deleted.')) {
+            return;
+        }
+
+        console.log('Clearing billing status for visit:', editingVisitId);
+
+        // Update the visit in Firestore
+        await db.collection('visits').doc(editingVisitId).update({
+            billingStatus: 'UNBILLED',
+            invoicedOn: firebase.firestore.FieldValue.delete(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log('Successfully updated Firestore');
+
+        // Fetch the updated visit data
+        const visitDoc = await db.collection('visits').doc(editingVisitId).get();
+        const updatedVisit = visitDoc.data();
+        console.log('Updated visit data:', updatedVisit);
+
+        // Update the UI
+        updateBillingStatusDisplay(updatedVisit);
+        
+        showSuccessMessage('Billing status cleared successfully');
+    } catch (error) {
+        console.error('Error clearing billing status:', error);
+        showErrorMessage('Failed to clear billing status: ' + error.message);
+    }
+}
+
+// Show confirmation dialog
+function showConfirmDialog(title, message, confirmText = 'OK', cancelText = 'Cancel') {
+    return new Promise((resolve) => {
+        // Create modal elements
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'confirmDialog';
+        
+        modal.innerHTML = `
+            <div class="modal-content delete-modal">
+                <div class="modal-header">
+                    <h3>${title}</h3>
+                    <button onclick="document.getElementById('confirmDialog').remove()" class="close-button" title="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="warning-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>${message}</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelButton" class="button secondary">${cancelText}</button>
+                    <button id="confirmButton" class="button danger">${confirmText}</button>
+                </div>
+            </div>
+        `;
+
+        // Add to document
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+        setTimeout(() => modal.classList.add('show'), 10);
+
+        // Add event listeners
+        const confirmButton = modal.querySelector('#confirmButton');
+        const cancelButton = modal.querySelector('#cancelButton');
+        const closeButton = modal.querySelector('.close-button');
+
+        confirmButton.onclick = () => {
+            modal.remove();
+            resolve(true);
+        };
+
+        cancelButton.onclick = closeButton.onclick = () => {
+            modal.remove();
+            resolve(false);
+        };
+    });
+}
+
+// Load visit data into modal
+async function loadVisitIntoModal(visitId) {
+    try {
+        const visitDoc = await db.collection('visits').doc(visitId).get();
+        if (!visitDoc.exists) {
+            console.error('Visit not found');
+            return;
+        }
+
+        const visit = visitDoc.data();
+        console.log('Loaded visit data:', visit);
+        currentVisit = { id: visitId, ...visit };
+        editingVisitId = visitId;
+
+        // Load client options before setting the value
+        await loadClientOptions();
+
+        // Update form fields
+        document.getElementById('visitClient').value = visit.clientId || '';
+        document.getElementById('dateScheduled').value = formatDateForInput(visit.scheduledDateTime);
+        document.getElementById('timeScheduled').value = formatTimeForInput(visit.scheduledDateTime);
+        document.getElementById('dateCompleted').value = formatDateForInput(visit.completedDateTime);
+        document.getElementById('timeCompleted').value = formatTimeForInput(visit.completedDateTime);
+        document.getElementById('timeToComplete').value = visit.timeToComplete || '';
+        document.getElementById('visitNotes').value = visit.notes || '';
+
+        // Update services
+        await loadSelectedServices(visit.services || []);
+        
+        // Update billing status
+        updateBillingStatusDisplay(visit);
+
+        // Initialize tab listeners
+        initializeTabListeners();
+
+    } catch (error) {
+        console.error('Error loading visit:', error);
+        showErrorMessage('Failed to load visit: ' + error.message);
+    }
+}
+
+// Add selected service
+function addSelectedService() {
+    const serviceSelect = document.getElementById('serviceSelector');
+    const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+    
+    if (!selectedOption || !selectedOption.value) {
+        showErrorMessage('Please select a service to add');
+        return;
+    }
+
+    // Check if service is already added
+    const existingService = document.querySelector(`.selected-service[data-service-id="${selectedOption.value}"]`);
+    if (existingService) {
+        showErrorMessage('This service is already added to the visit');
+        return;
+    }
+
+    const serviceElement = document.createElement('div');
+    serviceElement.className = 'selected-service';
+    serviceElement.setAttribute('data-service-id', selectedOption.value);
+    serviceElement.setAttribute('data-service-name', selectedOption.getAttribute('data-name'));
+    serviceElement.setAttribute('data-duration', selectedOption.getAttribute('data-duration'));
+    
+    serviceElement.innerHTML = `
+        <span>${selectedOption.getAttribute('data-name')} (${selectedOption.getAttribute('data-duration')} min)</span>
+        <button type="button" onclick="removeSelectedService(this.parentElement)" class="remove-service">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    document.getElementById('selectedServices').appendChild(serviceElement);
+    updateEstimatedTime();
 }

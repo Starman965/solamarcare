@@ -112,60 +112,55 @@
                                                 <i class="fas fa-user"></i>
                                                 Client
                                             </label>
-                                            <select id="visitClient" required>
+                                            <select id="visitClient" name="visitClient" required>
                                                 <option value="">Select a client...</option>
                                             </select>
                                         </div>
-
-                                        <!-- Scheduled Date and Time -->
-                                        <div class="form-group-row">
+                                        <div class="form-row">
                                             <div class="form-group">
-                                                <label for="scheduledDate">
+                                                <label for="dateScheduled">
                                                     <i class="fas fa-calendar"></i>
                                                     Date Scheduled
                                                 </label>
-                                                <input type="date" id="scheduledDate" required>
+                                                <input type="date" id="dateScheduled" name="dateScheduled" required>
                                             </div>
-
                                             <div class="form-group">
-                                                <label for="scheduledTime">
+                                                <label for="timeScheduled">
                                                     <i class="fas fa-clock"></i>
                                                     Time Scheduled
                                                 </label>
-                                                <input type="time" id="scheduledTime" required>
+                                                <input type="time" id="timeScheduled" name="timeScheduled" required>
                                             </div>
                                         </div>
-
-                                        <!-- Completed Date and Time -->
-                                        <div class="form-group-row">
+                                        <div class="form-row">
                                             <div class="form-group">
-                                                <label for="completedDate">
+                                                <label for="dateCompleted">
                                                     <i class="fas fa-calendar-check"></i>
                                                     Date Completed
                                                 </label>
-                                                <input type="date" id="completedDate">
+                                                <input type="date" id="dateCompleted">
                                             </div>
-
                                             <div class="form-group">
-                                                <label for="completedTime">
+                                                <label for="timeCompleted">
                                                     <i class="fas fa-clock"></i>
                                                     Time Completed
                                                 </label>
-                                                <input type="time" id="completedTime">
+                                                <input type="time" id="timeCompleted">
                                             </div>
                                         </div>
-
-                                        <!-- Time to Complete -->
                                         <div class="form-group">
                                             <label for="timeToComplete">
-                                                <i class="fas fa-hourglass-end"></i>
+                                                <i class="fas fa-hourglass-half"></i>
                                                 Time to Complete (minutes)
                                             </label>
-                                            <input type="number" 
-                                                   id="timeToComplete" 
-                                                   min="0" 
-                                                   step="1" 
-                                                   placeholder="Enter time in minutes">
+                                            <input type="number" id="timeToComplete" min="0">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-file-invoice-dollar"></i>
+                                                Billing Status
+                                            </label>
+                                            <div class="billing-status"></div>
                                         </div>
                                     </div>
                                 </div>
