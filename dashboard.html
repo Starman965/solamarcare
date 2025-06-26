@@ -41,79 +41,83 @@
         </nav>
 
         <main class="dashboard-main">
-            <!-- KPI Section -->
-            <section class="dashboard-section kpi-section">
-                <div class="section-header">
-                    <h2>Key Metrics</h2>
-                </div>
-                <div class="kpi-grid">
-                    <!-- Active Clients KPI -->
-                    <div class="kpi-card">
-                        <div class="kpi-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Active Clients</h3>
-                            <div class="kpi-value" id="activeClientsCount">0</div>
-                        </div>
+            <h2 class="page-title">Dashboard</h2>
+            
+            <div class="goal-card">
+                <h3>First Revenue Goal</h3>
+                <div class="goal-progress">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="revenueGoalBar"></div>
                     </div>
-
-                    <!-- Total Revenue KPI -->
-                    <div class="kpi-card">
-                        <div class="kpi-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Total Revenue</h3>
-                            <div class="kpi-value" id="totalRevenueAmount">$0.00</div>
-                        </div>
-                    </div>
-
-                    <!-- Revenue Collected KPI -->
-                    <div class="kpi-card success">
-                        <div class="kpi-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Revenue Collected</h3>
-                            <div class="kpi-value" id="revenueCollectedAmount">$0.00</div>
-                        </div>
-                    </div>
-
-                    <!-- Revenue Due KPI -->
-                    <div class="kpi-card warning">
-                        <div class="kpi-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Revenue Due</h3>
-                            <div class="kpi-value" id="revenueDueAmount">$0.00</div>
-                        </div>
-                    </div>
-
-                    <!-- Revenue Past Due KPI -->
-                    <div class="kpi-card danger">
-                        <div class="kpi-icon">
-                            <i class="fas fa-exclamation-circle"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Revenue Past Due</h3>
-                            <div class="kpi-value" id="revenuePastDueAmount">$0.00</div>
-                        </div>
-                    </div>
-
-                    <!-- Revenue Draft KPI -->
-                    <div class="kpi-card info">
-                        <div class="kpi-icon">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div class="kpi-content">
-                            <h3>Revenue Pending (Draft)</h3>
-                            <div class="kpi-value" id="revenueDraftAmount">$0.00</div>
-                        </div>
+                    <div class="goal-stats">
+                        <span id="revenueGoalAmount">$0 / $1,000</span>
+                        <span id="revenueGoalPercentage">0%</span>
                     </div>
                 </div>
-            </section>
+            </div>
+
+            <h2 class="section-title">Key Metrics</h2>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Active Clients</h3>
+                        <div class="kpi-value" id="activeClientsCount">0</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Total Revenue</h3>
+                        <div class="kpi-value" id="totalRevenueAmount">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card success">
+                    <div class="kpi-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Revenue Collected</h3>
+                        <div class="kpi-value" id="revenueCollectedAmount">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card warning">
+                    <div class="kpi-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Revenue Due</h3>
+                        <div class="kpi-value" id="revenueDueAmount">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card danger">
+                    <div class="kpi-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Revenue Past Due</h3>
+                        <div class="kpi-value" id="revenuePastDueAmount">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card info">
+                    <div class="kpi-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Revenue Pending (Draft)</h3>
+                        <div class="kpi-value" id="revenueDraftAmount">$0.00</div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
